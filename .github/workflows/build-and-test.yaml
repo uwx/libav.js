@@ -24,17 +24,17 @@ jobs:
 
       - run: make extract
 
-      #- uses: bhowell2/github-substring-action@1.0.2
-      #  id: sha
-      #  with:
-      #    value: ${{ github.sha }}
-      #    length_from_start: 7
+      - uses: bhowell2/github-substring-action@1.0.2
+        id: sha
+        with:
+          value: ${{ github.sha }}
+          length_from_start: 7
 
-      #- run: make release -j9 LIBAVJS_VERSION_SUFFIX=-${{ steps.sha.outputs.substring }}
+      - run: make release -j9 LIBAVJS_VERSION_SUFFIX=-${{ steps.sha.outputs.substring }}
 
-      #- uses: actions/upload-artifact@v3
-      #  with:
-      #    name: build
-      #    path: libav.js-*.zip
+      - uses: actions/upload-artifact@v3
+        with:
+          name: build
+          path: libav.js-*.zip
 
       - run: npm test
