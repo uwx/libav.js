@@ -38,3 +38,4 @@ jobs:
           path: libav.js-*.zip
 
       - run: npm test
+
