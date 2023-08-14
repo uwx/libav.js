@@ -129,7 +129,8 @@ jobs:
           length_from_start: 7
 
       - run: |-2
-          LIBAVJS_VERSION="4.3.6.0-${{ steps.sha.outputs.substring }}"
+          LIBAVJS_VERSION_SUFFIX=-${{ steps.sha.outputs.substring }}
+          LIBAVJS_VERSION="4.3.6.0$LIBAVJS_VERSION_SUFFIX"
           mkdir libav.js-$LIBAVJS_VERSION
           cp -a README.md docs libav.js-$LIBAVJS_VERSION/
           mkdir libav.js-$LIBAVJS_VERSION/dist

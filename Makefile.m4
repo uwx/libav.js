@@ -151,7 +151,7 @@ release:
 	cp -a README.md docs libav.js-$(LIBAVJS_VERSION)/
 	mkdir libav.js-$(LIBAVJS_VERSION)/dist
 	for v in default lite fat obsolete opus flac opus-flac webm \
-		webm-opus-flac mediarecorder-transcoder open-media webcodecs; \
+		webm-opus-flac mediarecorder-transcoder open-media webcodecs all-audio-cli rawvideo h265 prores mediarecorder-transcoder all; \
 	do \
 		$(MAKE) build-$$v; \
 		cp dist/libav-$(LIBAVJS_VERSION)-$$v.* \
