@@ -42,7 +42,7 @@ const configs = [
     ["mediarecorder-openh264", ["format-ogg", "format-webm", "codec-libopus", "format-mp4", "codec-aac", "format-flac", "codec-flac", "swscale", "libvpx", "codec-libvpx_vp8", "decoder-h264", "codec-libopenh264"]],
 
     ["empty", []],
-    ["all", ['format-mov']
+    ["all", ['format-mov']]
 ];
 let all = Object.create(null);
 

@@ -1,5 +1,7 @@
 --enable-protocol=data --enable-protocol=file
 --enable-filter=aresample
+--enable-demuxer=mov
+--enable-muxer=mov
 --enable-demuxer=ogg
 --enable-muxer=ogg
 --enable-demuxer=matroska
