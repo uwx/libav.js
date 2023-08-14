@@ -1,8 +1,13 @@
 name: build-and-test
 run-name: Build and test ${{ github.sha }}
 on: [push]
+
+env:
+  EM_VERSION: 1.39.18
+  EM_CACHE_FOLDER: 'emsdk-cache'
+
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -10,11 +15,55 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '18'
+          cache: npm
+
+      - uses: actions/cache@v3
+        name: Cache system libraries
+        with:
+          path: ${{env.EM_CACHE_FOLDER}}
+          key: ${{env.EM_VERSION}}-${{ runner.os }}
 
       - uses: mymindstorm/setup-emsdk@v12
         with:
-          version: 3.1.43
-          actions-cache-folder: 'cache-emsdk'
+          version: ${{env.EM_VERSION}}
+          actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
+
+      - uses: actions/cache@v3
+        name: Cache dependencies
+        with:
+          key: cache-dependencies-${{ hashFiles('mk/*') }}
+          path: build/*.tar*
+
+      - run: make extract
+
+      - uses: bhowell2/github-substring-action@1.0.2
+        id: sha
+        with:
+          value: ${{ github.sha }}
+          length_from_start: 7
+
+      - run: npm test
+
+  full-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: npm
+
+      - uses: actions/cache@v3
+        name: Cache system libraries
+        with:
+          path: ${{env.EM_CACHE_FOLDER}}
+          key: ${{env.EM_VERSION}}-${{ runner.os }}
+
+      - uses: mymindstorm/setup-emsdk@v12
+        with:
+          version: ${{env.EM_VERSION}}
+          actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
 
       - uses: actions/cache@v3
         name: Cache dependencies
@@ -34,8 +83,56 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: build
+          name: complete build
           path: libav.js-*.zip
 
-      - run: npm test
+  build-variant:
+    strategy:
+      matrix:
+        variant: [default, lite, fat, obsolete, opus, flac, opus-flac, webm, webm-opus-flac, mediarecorder-transcoder, open-media, webcodecs, all-audio-cli, rawvideo, h265, prores, mediarecorder-transcoder, all]
 
+    if: |
+      !contains(github.event.head_commit.message, 'skip ci')
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: npm
+
+      - uses: actions/cache@v3
+        name: Cache system libraries
+        with:
+          path: ${{env.EM_CACHE_FOLDER}}
+          key: ${{env.EM_VERSION}}-${{ runner.os }}
+
+      - uses: mymindstorm/setup-emsdk@v12
+        with:
+          version: ${{env.EM_VERSION}}
+          actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
+
+      - uses: actions/cache@v3
+        name: Cache dependencies
+        with:
+          key: cache-dependencies-${{ hashFiles('mk/*') }}
+          path: build/*.tar*
+
+      - run: make extract
+
+      - uses: bhowell2/github-substring-action@1.0.2
+        id: sha
+        with:
+          value: ${{ github.sha }}
+          length_from_start: 7
+
+      - run: make build-${{matrix.variant}} -j9 LIBAVJS_VERSION_SUFFIX=-${{ steps.sha.outputs.substring }}
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: libav.js ${{matrix.variant}}
+          path: dist/libav-*-${{matrix.variant}}.*
+
+  
