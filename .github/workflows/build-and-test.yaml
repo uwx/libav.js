@@ -128,7 +128,7 @@ jobs:
           value: ${{ github.sha }}
           length_from_start: 7
 
-      - run: |
+      - run: |-
           LIBAVJS_VERSION_SUFFIX="-${{ steps.sha.outputs.substring }}"
           LIBAVJS_VERSION="4.3.6.0$(LIBAVJS_VERSION_SUFFIX)"
           mkdir libav.js-$(LIBAVJS_VERSION)
