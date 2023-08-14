@@ -10,7 +10,6 @@
 --enable-encoder=libopus
 --enable-demuxer=mov
 --enable-muxer=ipod
---enable-muxer=mov
 --enable-decoder=aac
 --enable-encoder=aac
 --enable-demuxer=flac

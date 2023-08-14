@@ -42,7 +42,7 @@ const configs = [
     ["mediarecorder-openh264", ["format-ogg", "format-webm", "codec-libopus", "format-mp4", "codec-aac", "format-flac", "codec-flac", "swscale", "libvpx", "codec-libvpx_vp8", "decoder-h264", "codec-libopenh264"]],
 
     ["empty", []],
-    ["all", null]
+    ["all", ['format-mov']
 ];
 let all = Object.create(null);
 
@@ -52,10 +52,10 @@ let all = Object.create(null);
             for (const fragment of config)
                 all[fragment] = true;
         } else {
-            config = Object.keys(all);
+            config = config.concat(Object.keys(all));
         }
 
-        const p = cproc.spawn("./mkconfig.js", [name, JSON.stringify(config)], {
+        const p = cproc.spawn('node', ["./mkconfig.js", name, JSON.stringify(config)], {
             stdio: "inherit"
         });
         await new Promise(res => p.on("close", res));
