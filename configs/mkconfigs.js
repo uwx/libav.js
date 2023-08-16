@@ -41,14 +41,66 @@ const configs = [
     // Patent and/or license encumbered encoders
     ["mediarecorder-openh264", ["format-ogg", "format-webm", "codec-libopus", "format-mp4", "codec-aac", "format-flac", "codec-flac", "swscale", "libvpx", "codec-libvpx_vp8", "decoder-h264", "codec-libopenh264"]],
 
+    ['extreme', [
+        'bsf-libass',
+        'bsf-libbluray',
+        'bsf-libfreetype',
+        'bsf-libmp3lame',
+        'bsf-libopencore-amrnb',
+        'bsf-libopencore-amrwb',
+        'bsf-libopenjpeg',
+        'bsf-libopus',
+        'bsf-libshine',
+        'bsf-libsnappy',
+        'bsf-libsoxr',
+        'bsf-libtheora',
+        'bsf-libtwolame',
+        'bsf-libvpx',
+        'bsf-libwavpack',
+        'bsf-libwebp',
+        'bsf-libx264',
+        'bsf-libx265',
+        'bsf-libxml2',
+        'bsf-libzimg',
+        'bsf-lzma',
+        'bsf-zlib',
+        'bsf-gmp',
+        'bsf-libvidstab',
+        'bsf-libvorbis',
+        'bsf-libvo-amrwbenc',
+        'bsf-libmysofa',
+        'bsf-libspeex',
+        'bsf-libxvid',
+        'bsf-libaom',
+        'bsf-libmfx',
+        'bsf-amf',
+        'bsf-ffnvcodec',
+        'bsf-cuvid',
+        'bsf-d3d11va',
+        'bsf-nvenc',
+        'bsf-nvdec',
+        'bsf-dxva2',
+        'bsf-avisynth',
+    ]],
+
     ["empty", []],
-    ["all", ['format-mov']]
+    ["all", ['format-mov',
+        'format-mpegts',
+        'codec-mp1',
+        'codec-mp2',
+        'codec-mp3',
+        'codec-mp3adu',
+        'codec-mp3on4',
+        'codec-mpeg1video',
+        'codec-mpeg2video',
+        'bsf-libx264',
+    ]]
 ];
 let all = Object.create(null);
 
-(async function() {
+(async function () {
     for (let [name, config] of configs) {
-        if (name !== "all") {
+        if (name !== "all" && name !== 'extreme') {
             for (const fragment of config)
                 all[fragment] = true;
         } else {
