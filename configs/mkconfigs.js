@@ -42,6 +42,15 @@ const configs = [
     ["mediarecorder-openh264", ["format-ogg", "format-webm", "codec-libopus", "format-mp4", "codec-aac", "format-flac", "codec-flac", "swscale", "libvpx", "codec-libvpx_vp8", "decoder-h264", "codec-libopenh264"]],
 
     ['extreme', [
+        'format-mov',
+        'format-mpegts',
+        'codec-mp1',
+        'codec-mp2',
+        'codec-mp3',
+        'codec-mp3adu',
+        'codec-mp3on4',
+        'codec-mpeg1video',
+        'codec-mpeg2video',
         'bsf-libass',
         'bsf-libbluray',
         'bsf-libfreetype',
