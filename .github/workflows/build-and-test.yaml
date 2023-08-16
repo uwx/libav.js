@@ -34,6 +34,12 @@ jobs:
           key: cache-dependencies-${{ hashFiles('mk/*') }}-${{ runner.os }}-${{github.job}}
           path: build/*.tar*
 
+      - name: Generate configs
+        run: |
+          cd configs
+          node mkconfigs
+          cd ..
+
       - run: make extract
 
       - uses: bhowell2/github-substring-action@1.0.2
@@ -71,6 +77,12 @@ jobs:
           key: cache-dependencies-${{ hashFiles('mk/*') }}-${{ runner.os }}-${{github.job}}
           path: build/*.tar*
 
+      - name: Generate configs
+        run: |
+          cd configs
+          node mkconfigs
+          cd ..
+
       - run: make extract
 
       - uses: bhowell2/github-substring-action@1.0.2
@@ -88,8 +100,9 @@ jobs:
 
   build-variant:
     strategy:
+      fail-fast: false
       matrix:
-        variant: [default, lite, fat, obsolete, opus, flac, opus-flac, webm, webm-opus-flac, mediarecorder-transcoder, open-media, webcodecs, all-audio-cli, rawvideo, h265, prores, mediarecorder-transcoder, all]
+        variant: [default, lite, fat, obsolete, opus, flac, opus-flac, webm, webm-opus-flac, mediarecorder-transcoder, open-media, webcodecs, all-audio-cli, rawvideo, h265, prores, mediarecorder-transcoder, all, extreme]
 
     if: |
       !contains(github.event.head_commit.message, 'skip ci')
@@ -119,6 +132,12 @@ jobs:
         with:
           key: cache-dependencies-${{ hashFiles('mk/*') }}-${{ runner.os }}-${{github.job}}
           path: build/*.tar*
+
+      - name: Generate configs
+        run: |
+          cd configs
+          node mkconfigs
+          cd ..
 
       - run: make extract
 
