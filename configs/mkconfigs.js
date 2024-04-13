@@ -172,7 +172,7 @@ async function main() {
             for (const fragment of config)
                 all[fragment] = true;
         } else {
-            config = config.concat(Object.keys(all));
+            config = (config ?? []).concat(Object.keys(all));
         }
 
         const p = cproc.spawn('node', ["./mkconfig.js", name, JSON.stringify(config)], {
