@@ -54,7 +54,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: build
-          path: libav.js-*.zip
+          path: dist/release/libav.js-*.zip
 
       #- run: make
       #- run: make build-all
