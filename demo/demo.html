@@ -21,8 +21,6 @@
     <body>
         <script type="text/javascript">(async function() {
             try {
-                const version = "4.3.6.0";
-
                 const dce = document.createElement.bind(document);
                 const main = dce("div");
                 document.body.appendChild(main);
@@ -58,7 +56,7 @@
                 LibAV = {base: "../dist"};
                 await new Promise(res => {
                     const scr = dce("script");
-                    scr.src = `../dist/libav-${version}-${variant}.js?${Math.random()}`;
+                    scr.src = `../dist/libav-${variant}.js?${Math.random()}`;
                     scr.onload = res;
                     scr.onerror = () => {
                         alert("Failed to load variant!");
@@ -190,8 +188,7 @@
 
                         // Decode it
                         const frames = await libav.ff_decode_multi(
-                            c, pkt, frame, [vPacket],
-                            res === libav.AVERROR_EOF && vIdx === vPackets.length - 1
+                            c, pkt, frame, [vPacket], false
                         );
 
                         // Display any frames here
@@ -230,7 +227,6 @@
                                         idx += frame.width * 4;
                                     }
                                 }
-                                id.data.set(frame.data[0]);
 
                                 // Display it
                                 const ib = await createImageBitmap(id);

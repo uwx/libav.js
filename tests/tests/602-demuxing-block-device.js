@@ -15,6 +15,9 @@
 
 // Example of directly using a block device
 
+if (h.libAVOpts && h.libAVOpts.yesthreads)
+    throw new Error("Known bug: test 602 does not work with threads.");
+
 const libav = await h.LibAV();
 const buf = await h.readCachedFile("bbb.webm");
 
@@ -47,7 +50,7 @@ await libav.AVCodecContext_sample_fmt_s(c, libav.AV_SAMPLE_FMT_FLT);
 let packets = [];
 while (true) {
     const [res, rdPackets] =
-        await libav.ff_read_multi(fmt_ctx, pkt, null, {limit: 1024 * 1024});
+        await libav.ff_read_frame_multi(fmt_ctx, pkt, {limit: 1024 * 1024});
 
     if (audio_stream_idx in rdPackets) {
         packets = packets.concat(rdPackets[audio_stream_idx]);

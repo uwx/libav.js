@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2023 Yahweasel and contributors
+ * Copyright (C) 2019-2024 Yahweasel and contributors
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted.
@@ -29,6 +29,7 @@
 #include "libavutil/avutil.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
+#include "libavutil/version.h"
 
 #define A(struc, type, field) \
     type struc ## _ ## field(struc *a) { return a->field; } \
@@ -57,6 +58,10 @@ void ff_nothing() {}
 #define B(type, field) A(AVFrame, type, field)
 #define BL(type, field) AL(AVFrame, type, field)
 #define BA(type, field) AA(AVFrame, type, field)
+B(size_t, crop_bottom)
+B(size_t, crop_left)
+B(size_t, crop_right)
+B(size_t, crop_top)
 BA(uint8_t *, data)
 B(int, format)
 B(int, height)
@@ -71,8 +76,11 @@ B(int, width)
 #undef BL
 #undef BA
 
-// The following code should work also with older code
-#define CHL(struc)\
+/* Either way we expose the old channel layout API, but if the new channel
+ * layout API is available, we use it */
+#if LIBAVUTIL_VERSION_INT > AV_VERSION_INT(57, 23, 100)
+/* New API */
+#define CHL(struc) \
 void struc ## _channel_layoutmask_s(struc *a, uint32_t bl, uint32_t bh) { \
     uint64_t mask =  (((uint64_t) bl)) | (((uint64_t) bh) << 32); \
     av_channel_layout_uninit(&a->ch_layout); \
@@ -112,6 +120,46 @@ void struc ##_channel_layouthi_s(struc *a, uint32_t b) { \
     av_channel_layout_from_mask(&a->ch_layout, mask);\
 }
 
+#else
+/* Old API */
+#define CHL(struc) \
+void struc ## _channel_layoutmask_s(struc *a, uint32_t bl, uint32_t bh) { \
+    a->channel_layout = ((uint16_t) bh << 32) | bl; \
+} \
+uint64_t struc ## _channel_layoutmask(struc *a) { \
+    return a->channel_layout; \
+}\
+int struc ## _channels(struc *a) { \
+    return a->channels; \
+} \
+void struc ## _channels_s(struc *a, int b) { \
+    a->channels = b; \
+}\
+int struc ## _ch_layout_nb_channels(struc *a) { \
+    return a->channels; \
+}\
+void struc ## _ch_layout_nb_channels_s(struc *a, int b) { \
+    a->channels = b; \
+}\
+uint32_t struc ## _channel_layout(struc *a) { \
+    return a->channel_layout; \
+}\
+uint32_t struc ##_channel_layouthi(struc *a) { \
+    return a->channel_layout >> 32; \
+}\
+void struc ##_channel_layout_s(struc *a, uint32_t b) { \
+    a->channel_layout = \
+        (a->channel_layout & (0xFFFFFFFFull << 32)) | \
+        ((uint64_t) b); \
+}\
+void struc ##_channel_layouthi_s(struc *a, uint32_t b) { \
+    a->channel_layout = \
+        (((uint64_t) b) << 32) | \
+        (a->channel_layout & 0xFFFFFFFFull); \
+}
+
+#endif /* Channel layout API version */
+
 CHL(AVFrame)
 
 int AVFrame_sample_aspect_ratio_num(AVFrame *a) {
@@ -129,6 +177,7 @@ void AVFrame_sample_aspect_ratio_s(AVFrame *a, int n, int d) {
 
 /* AVPixFmtDescriptor */
 #define B(type, field) A(AVPixFmtDescriptor, type, field)
+B(uint64_t, flags)
 B(uint8_t, nb_components)
 B(uint8_t, log2_chroma_h)
 B(uint8_t, log2_chroma_w)
@@ -242,6 +291,16 @@ void AVCodecContext_time_base_s(AVCodecContext *a, int n, int d) {
     a->time_base.den = d;
 }
 
+/* AVCodecDescriptor */
+#define B(type, field) A(AVCodecDescriptor, type, field)
+B(enum AVCodecID, id)
+B(char *, long_name)
+AA(AVCodecDescriptor, char *, mime_types)
+B(char *, name)
+B(int, props)
+B(enum AVMediaType, type)
+#undef B
+
 /* AVCodecParameters */
 #define B(type, field) A(AVCodecParameters, type, field)
 B(enum AVCodecID, codec_id)
@@ -321,6 +380,7 @@ void av_packet_rescale_ts_js(
 /* AVFormatContext */
 #define B(type, field) A(AVFormatContext, type, field)
 #define BA(type, field) AA(AVFormatContext, type, field)
+B(int, flags)
 B(unsigned int, nb_streams)
 B(struct AVOutputFormat *, oformat)
 B(AVIOContext *, pb)
@@ -398,6 +458,11 @@ int libavjs_with_swscale() {
 void sws_getContext() {}
 void sws_freeContext() {}
 void sws_scale_frame() {}
+
+#elif LIBAVUTIL_VERSION_INT <= AV_VERSION_INT(57, 4, 101)
+/* No sws_scale_frame in this version */
+void sws_scale_frame() {}
+
 #endif
 
 
@@ -433,10 +498,13 @@ EM_JS(void *, libavjs_main_thread, (void *ignore), {
         var a;
 
         function reply(succ, ret) {
+            var transfer = [];
+            if (typeof ret === "object" && ret && ret.libavjsTransfer)
+                transfer = ret.libavjsTransfer;
             postMessage({
                 c: "libavjs_ret",
                 a: [a[0], a[1], succ, ret]
-            });
+            }, transfer);
         }
 
         if (ev.data && ev.data.c === "libavjs_run") {
@@ -458,8 +526,9 @@ EM_JS(void *, libavjs_main_thread, (void *ignore), {
             }
 
         } else if (ev.data && ev.data.c === "libavjs_wait_reader") {
-            var waiters = Module.ff_reader_dev_waiters;
-            Module.ff_reader_dev_waiters = [];
+            var name = "" + ev.data.fd;
+            var waiters = Module.ff_reader_dev_waiters[name] || [];
+            delete Module.ff_reader_dev_waiters[name];
             for (var i = 0; i < waiters.length; i++)
                 waiters[i]();
 
@@ -500,20 +569,22 @@ AVFormatContext *avformat_alloc_output_context2_js(AVOutputFormat *oformat,
 }
 
 AVFormatContext *avformat_open_input_js(const char *url, AVInputFormat *fmt,
-    AVDictionary **options)
+    AVDictionary *options)
 {
     AVFormatContext *ret = NULL;
-    int err = avformat_open_input(&ret, url, fmt, options);
+    AVDictionary** options_p = &options;
+    int err = avformat_open_input(&ret, url, fmt, options_p);
     if (err < 0)
         fprintf(stderr, "[avformat_open_input_js] %s\n", av_err2str(err));
     return ret;
 }
 
 AVIOContext *avio_open2_js(const char *url, int flags,
-    const AVIOInterruptCB *int_cb, AVDictionary **options)
+    const AVIOInterruptCB *int_cb, AVDictionary *options)
 {
     AVIOContext *ret = NULL;
-    int err = avio_open2(&ret, url, flags, int_cb, options);
+    AVDictionary** options_p = &options;
+    int err = avio_open2(&ret, url, flags, int_cb, options_p);
     if (err < 0)
         fprintf(stderr, "[avio_open2_js] %s\n", av_err2str(err));
     return ret;

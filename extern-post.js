@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2023 Yahweasel
+ * Copyright (C) 2019-2024 Yahweasel
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted.
@@ -13,15 +13,6 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-function LibAVGlobe() {
-    if (typeof globalThis !== "undefined") return globalThis;
-    else if (typeof self !== "undefined") return self;
-    return window;
-}
-
-if (typeof LibAVFactory !== "undefined")
-    LibAVGlobe().LibAVFactory = LibAVFactory;
-
 if (/* We're in a worker */
     typeof importScripts !== "undefined" &&
     /* We're not being loaded with noworker from the main code */
@@ -29,7 +20,6 @@ if (/* We're in a worker */
     /* We're not being loaded as a thread */
     typeof Module === "undefined"
     ) (function() {
-    var globe = LibAVGlobe();
     var libav;
 
     Promise.all([]).then(function() {
@@ -38,11 +28,10 @@ if (/* We're in a worker */
         return new Promise(function(res, rej) {
             onmessage = function(e) {
                 if (e && e.data && e.data.config) {
-                    if (e.data.config.wasmurl) {
-                        if (!globe.LibAV) globe.LibAV = {};
-                        globe.LibAV.wasmurl = e.data.config.wasmurl;
-                    }
-                    LibAVFactory().then(res).catch(rej);
+                    LibAVFactory({
+                        wasmurl: e.data.config.wasmurl,
+                        variant: e.data.config.variant
+                    }).then(res).catch(rej);
                 }
             };
         });
@@ -56,12 +45,13 @@ if (/* We're in a worker */
             var fun = e.data[1];
             var args = e.data.slice(2);
             var ret = void 0;
+            var transfer = [];
             var succ = true;
             try {
                 ret = libav[fun].apply(libav, args);
             } catch (ex) {
                 succ = false;
-                ret = ex.toString() + "\n" + ex.stack;
+                ret = ex;
             }
             if (succ && typeof ret === "object" && ret !== null && ret.then) {
                 // Let the promise resolve
@@ -69,13 +59,25 @@ if (/* We're in a worker */
                     ret = res;
                 }).catch(function(ex) {
                     succ = false;
-                    ret = ex.toString() + "\n" + ex.stack;
+                    ret = ex;
                 }).then(function() {
-                    postMessage([id, fun, succ, ret]);
+                    if (typeof ret === "object" && ret && ret.libavjsTransfer)
+                        transfer = ret.libavjsTransfer;
+                    try {
+                        postMessage([id, fun, succ, ret], transfer);
+                    } catch (ex) {
+                        postMessage([id, fun, succ, "" + ret]);
+                    }
                 });
 
             } else {
-                postMessage([id, fun, succ, ret]);
+                if (typeof ret === "object" && ret && ret.libavjsTransfer)
+                    transfer = ret.libavjsTransfer;
+                try {
+                    postMessage([id, fun, succ, ret], transfer);
+                } catch (ex) {
+                    postMessage([id, fun, succ, "" + ret]);
+                }
 
             }
         };

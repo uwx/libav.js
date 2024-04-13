@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2023 Yahweasel
+ * Copyright (C) 2019-2024 Yahweasel
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted.
@@ -12,6 +12,8 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+
+@E6 let LibAV;
 
 (function() {
     function isWebAssemblySupported(module) {
@@ -36,22 +38,6 @@
         return false;
     }
 
-    function isSIMDSupported() {
-        return isWebAssemblySupported([0x0, 0x61, 0x73, 0x6d, 0x1, 0x0, 0x0,
-            0x0, 0x1, 0x5, 0x1, 0x60, 0x0, 0x1, 0x7b, 0x3, 0x2, 0x1, 0x0, 0xa,
-            0xa, 0x1, 0x8, 0x0, 0x41, 0x0, 0xfd, 0xf, 0xfd, 0x62, 0xb]);
-    }
-
-    /* Source: Jason Miller on Twitter. Returns true if we're in an ES6 module
-     * in a worker. */
-    function isModule() {
-        try {
-            importScripts("data:,");
-            return false;
-        } catch(e) {}
-        return true;
-    }
-
     var libav;
     var nodejs = (typeof process !== "undefined");
 
@@ -60,104 +46,274 @@
         LibAV = {};
     libav = LibAV;
 
-    if (!libav.base)
-        libav.base = ".";
+    if (!libav.base) {
+@E6     libav.base = import.meta.url;
+@E5     if (typeof __dirname === "string") {
+@E5         libav.base = __dirname;
+@E5     } else {
+@E5         if (typeof document !== "undefined" && document && document.currentScript)
+@E5             libav.base = document.currentScript.src;
+@E5         else if (typeof self !== "undefined" && self && self.location)
+@E5             libav.base = self.location.href;
+@E5         else
+@E5             libav.base = "./.";
+            libav.base = libav.base.replace(/\/[^\/]*$/, "");
+@E5     }
+    }
 
     // Proxy our detection functions
     libav.isWebAssemblySupported = isWebAssemblySupported;
     libav.isThreadingSupported = isThreadingSupported;
-    libav.isSIMDSupported = isSIMDSupported;
-    libav.isModule = isModule;
 
     // Get the target that will load, given these options
     function target(opts) {
         opts = opts || {};
         var wasm = !opts.nowasm && isWebAssemblySupported();
         var thr = opts.yesthreads && wasm && !opts.nothreads && isThreadingSupported();
-        var simd = wasm && !opts.nosimd && isSIMDSupported();
         if (!wasm)
             return "asm";
-        else if (!thr && !simd)
-            return "wasm";
+        else if (thr)
+            return "thr";
         else
-            return (thr ? "thr" : "") + (simd ? "simd" : "");
+            return "wasm";
     }
     libav.target = target;
     libav.VER = "@VER";
     libav.CONFIG = "@CONFIG";
     libav.DBG = "@DBG";
+    libav.factories = {};
+
+    // Statics that are provided both by LibAV and by libav instances
+    var libavStatics = {};
+
+    /* libav.js returns and takes 64-bit numbers as 32-bit pairs, so we
+     * need conversion functions to use those */
+    libavStatics.i64tof64 = function(lo, hi) {
+        // Common positive case
+        if (!hi && lo >= 0) return lo;
+
+        // Common negative case
+        if (hi === -1 && lo < 0) return lo;
+
+        /* Lo bit negative numbers are really just the 32nd bit being
+         * set, so we make up for that with an additional 2^32 */
+        return (
+            hi * 0x100000000 +
+            lo +
+            ((lo < 0) ? 0x100000000 : 0)
+        );
+    };
+
+    libavStatics.f64toi64 = function(val) {
+        return [~~val, Math.floor(val / 0x100000000)];
+    };
+
+    libavStatics.i64ToBigInt = function(lo, hi) {
+        var dv = new DataView(new ArrayBuffer(8));
+        dv.setInt32(0, lo, true);
+        dv.setInt32(4, hi, true);
+        return dv.getBigInt64(0, true);
+    };
+
+    libavStatics.bigIntToi64 = function(val) {
+        var dv = new DataView(new ArrayBuffer(8));
+        dv.setBigInt64(0, val, true);
+        return [dv.getInt32(0, true), dv.getInt32(4, true)];
+    };
+
+    // Some enumerations lifted directly from FFmpeg
+    function enume(vals, first) {
+        if (typeof first === undefined)
+            first = 0;
+        var i = first;
+        vals.forEach(function(val) {
+            libavStatics[val] = i++;
+        });
+    }
+
+    // AV_OPT
+    libavStatics.AV_OPT_SEARCH_CHILDREN = 1;
+
+    // AVMediaType
+    enume(["AVMEDIA_TYPE_UNKNOWN", "AVMEDIA_TYPE_VIDEO",
+        "AVMEDIA_TYPE_AUDIO", "AVMEDIA_TYPE_DATA", "AVMEDIA_TYPE_SUBTITLE",
+        "AVMEDIA_TYPE_ATTACHMENT"], -1);
+
+    // AVSampleFormat
+    enume(["AV_SAMPLE_FMT_NONE", "AV_SAMPLE_FMT_U8", "AV_SAMPLE_FMT_S16",
+        "AV_SAMPLE_FMT_S32", "AV_SAMPLE_FMT_FLT", "AV_SAMPLE_FMT_DBL",
+        "AV_SAMPLE_FMT_U8P", "AV_SAMPLE_FMT_S16P", "AV_SAMPLE_FMT_S32P",
+        "AV_SAMPLE_FMT_FLTP", "AV_SAMPLE_FMT_DBLP", "AV_SAMPLE_FMT_S64",
+        "AV_SAMPLE_FMT_S64P", "AV_SAMPLE_FMT_NB"], -1);
+
+    // AVPixelFormat
+    enume(["AV_PIX_FMT_NONE", "AV_PIX_FMT_YUV420P",
+        "AV_PIX_FMT_YUYV422", "AV_PIX_FMT_RGB24", "AV_PIX_FMT_BGR24",
+        "AV_PIX_FMT_YUV422P", "AV_PIX_FMT_YUV444P",
+        "AV_PIX_FMT_YUV410P", "AV_PIX_FMT_YUV411P", "AV_PIX_FMT_GRAY8",
+        "AV_PIX_FMT_MONOWHITE", "AV_PIX_FMT_MONOBLACK",
+        "AV_PIX_FMT_PAL8", "AV_PIX_FMT_YUVJ420P",
+        "AV_PIX_FMT_YUVJ422P", "AV_PIX_FMT_YUVJ444P",
+        "AV_PIX_FMT_UYVY422", "AV_PIX_FMT_UYYVYY411",
+        "AV_PIX_FMT_BGR8", "AV_PIX_FMT_BGR4", "AV_PIX_FMT_BGR4_BYTE",
+        "AV_PIX_FMT_RGB8", "AV_PIX_FMT_RGB4", "AV_PIX_FMT_RGB4_BYTE",
+        "AV_PIX_FMT_NV12", "AV_PIX_FMT_NV21", "AV_PIX_FMT_ARGB",
+        "AV_PIX_FMT_RGBA", "AV_PIX_FMT_ABGR", "AV_PIX_FMT_BGRA",
+        "AV_PIX_FMT_GRAY16BE", "AV_PIX_FMT_GRAY16LE",
+        "AV_PIX_FMT_YUV440P", "AV_PIX_FMT_YUVJ440P",
+        "AV_PIX_FMT_YUVA420P", "AV_PIX_FMT_RGB48BE",
+        "AV_PIX_FMT_RGB48LE", "AV_PIX_FMT_RGB565BE",
+        "AV_PIX_FMT_RGB565LE", "AV_PIX_FMT_RGB555BE",
+        "AV_PIX_FMT_RGB555LE", "AV_PIX_FMT_BGR565BE",
+        "AV_PIX_FMT_BGR565LE", "AV_PIX_FMT_BGR555BE",
+        "AV_PIX_FMT_BGR555LE"], -1);
+
+    // AVIO_FLAGs
+    libavStatics.AVIO_FLAG_READ = 1;
+    libavStatics.AVIO_FLAG_WRITE = 2;
+    libavStatics.AVIO_FLAG_READ_WRITE = 3;
+    libavStatics.AVIO_FLAG_NONBLOCK = 8;
+    libavStatics.AVIO_FLAG_DIRECT = 0x8000;
+
+    // Useful AVFMT_FLAGs
+    libavStatics.AVFMT_FLAG_NOBUFFER = 0x40;
+    libavStatics.AVFMT_FLAG_FLUSH_PACKETS = 0x200;
+
+    // AVSEEK_FLAGs
+    libavStatics.AVSEEK_FLAG_BACKWARD = 1;
+    libavStatics.AVSEEK_FLAG_BYTE = 2;
+    libavStatics.AVSEEK_FLAG_ANY = 4;
+    libavStatics.AVSEEK_FLAG_FRAME = 8;
+
+    // AVDISCARDs
+    libavStatics.AVDISCARD_NONE = -16;
+    libavStatics.AVDISCARD_DEFAULT = 0;
+    libavStatics.AVDISCARD_NONREF = 8;
+    libavStatics.AVDISCARD_BIDIR = 16;
+    libavStatics.AVDISCARD_NONINTRA = 24;
+    libavStatics.AVDISCARD_NONKEY = 32;
+    libavStatics.AVDISCARD_ALL = 48;
+
+    // AV_LOG levels
+    libavStatics.AV_LOG_QUIET = -8;
+    libavStatics.AV_LOG_PANIC = 0;
+    libavStatics.AV_LOG_FATAL = 8;
+    libavStatics.AV_LOG_ERROR = 16;
+    libavStatics.AV_LOG_WARNING = 24;
+    libavStatics.AV_LOG_INFO = 32;
+    libavStatics.AV_LOG_VERBOSE = 40;
+    libavStatics.AV_LOG_DEBUG = 48;
+    libavStatics.AV_LOG_TRACE = 56;
+
+    // AV_PKT_FLAGs
+    libavStatics.AV_PKT_FLAG_KEY = 0x0001;
+    libavStatics.AV_PKT_FLAG_CORRUPT = 0x0002;
+    libavStatics.AV_PKT_FLAG_DISCARD = 0x0004;
+    libavStatics.AV_PKT_FLAG_TRUSTED = 0x0008;
+    libavStatics.AV_PKT_FLAG_DISPOSABLE = 0x0010;
+
+
+    // Errors
+    enume(["E2BIG", "EPERM", "EADDRINUSE", "EADDRNOTAVAIL",
+        "EAFNOSUPPORT", "EAGAIN", "EALREADY", "EBADF", "EBADMSG",
+        "EBUSY", "ECANCELED", "ECHILD", "ECONNABORTED", "ECONNREFUSED",
+        "ECONNRESET", "EDEADLOCK", "EDESTADDRREQ", "EDOM", "EDQUOT",
+        "EEXIST", "EFAULT", "EFBIG", "EHOSTUNREACH", "EIDRM", "EILSEQ",
+        "EINPROGRESS", "EINTR", "EINVAL", "EIO", "EISCONN", "EISDIR",
+        "ELOOP", "EMFILE", "EMLINK", "EMSGSIZE", "EMULTIHOP",
+        "ENAMETOOLONG", "ENETDOWN", "ENETRESET", "ENETUNREACH",
+        "ENFILE", "ENOBUFS", "ENODEV", "ENOENT"], 1);
+    libavStatics.AVERROR_EOF = -0x20464f45;
+
+    // Apply the statics to LibAV
+    Object.assign(libav, libavStatics);
+
 
     // Now start making our instance generating function
     libav.LibAV = function(opts) {
         opts = opts || {};
         var base = opts.base || libav.base;
         var t = target(opts);
-        var toImport = libav.toImport ||  base + "/libav-@VER-@CONFIG@DBG." + t + ".js";
+        var variant = "@CONFIG";
+        if (t === "asm") {
+            // In asm.js, we can't load alternate wasm
+            variant = opts.variant || libav.variant || "@CONFIG";
+        }
+
+        // Determine the file to import
+@E6     var useES6 = true;
+@E6     if (useES6 && (opts.noes6 || libav.noes6))
+@E6         useES6 = false;
+        var toImport = opts.toImport || libav.toImport ||
+            base + "/libav-@VER-" + variant + "@DBG." + t + "." +
+@E6        (useES6?"mjs":"js");
+@E5        "js";
         var ret;
 
         var mode = "direct";
-        if (t.indexOf("thr") === 0)
+        if (t === "thr")
             mode = "threads";
         else if (!nodejs && !opts.noworker && typeof Worker !== "undefined")
             mode = "worker";
 
         return Promise.all([]).then(function() {
             // Step one: Get LibAV loaded
-            if (!libav.LibAVFactory) {
-                if (nodejs) {
-                    // Node.js: Load LibAV now
-                    libav.LibAVFactory = require(toImport);
+            if (opts.factory || libav.factory)
+                return opts.factory || libav.factory;
+            if (libav.factories[toImport])
+                return libav.factories[toImport];
 
-                } else if (mode === "worker") {
-                    // Worker: Nothing to load now
+            if (mode === "worker") {
+                // Worker: Nothing to load now
 
-                } else if (typeof importScripts !== "undefined") {
-                    // Worker scope. Import it.
-                    if (!isModule()) {
-                        importScripts(toImport);
-                        libav.LibAVFactory = LibAVFactory;
-                    } else {
-                        var gt;
-                        if (typeof globalThis !== "undefined") gt = globalThis;
-                        else if (typeof self !== "undefined") gt = self;
-                        else gt = window;
-                        libav.LibAVFactory = gt.LibAVFactory;
+@E6         } else if (useES6) {
+@E6             // Load via ES6 module
+@E6             return import(toImport).then(function(laf) {
+@E6                 libav.factories[toImport] = laf.default;
+@E6                 return laf.default;
+@E6             });
 
-                        if (gt.LibAVFactory)
-                            return gt.LibAVFactory;
-                        else
-                            throw new Error("If in an ES6 module, you need to import " + toImport + " yourself before loading libav.js.");
-                    }
+            } else if (nodejs) {
+                // Node.js: Load LibAV now
+                return libav.factories[toImport] = require(toImport);
 
-                } else {
-                    // Web: Load the script
-                    return new Promise(function(res, rej) {
-                        var scr = document.createElement("script");
-                        scr.src = toImport;
-                        scr.addEventListener("load", res);
-                        scr.addEventListener("error", rej);
-                        scr.async = true;
-                        document.body.appendChild(scr);
-                    }).then(function() {
-                        libav.LibAVFactory = LibAVFactory;
+            } else if (typeof importScripts !== "undefined") {
+                // Worker scope. Import it.
+                importScripts(toImport);
+                return libav.factories[toImport] = LibAVFactory;
 
-                    });
+            } else {
+                // Web: Load the script
+                return new Promise(function(res, rej) {
+                    var scr = document.createElement("script");
+                    scr.src = toImport;
+                    scr.addEventListener("load", res);
+                    scr.addEventListener("error", rej);
+                    scr.async = true;
+                    document.body.appendChild(scr);
+                }).then(function() {
+                    return libav.factories[toImport] = LibAVFactory;
 
-                }
+                });
+
             }
 
-        }).then(function() {
+        }).then(function(factory) {
+
             // Step two: Create the underlying instance
             if (mode === "worker") {
                 // Worker thread
                 ret = {};
 
                 // Load the worker
-                ret.worker = new Worker(toImport);
+                ret.worker = new Worker(toImport
+@E6                 , {type: useES6 ? "module" : "classic"}
+                );
 
                 ret.worker.postMessage({
                     config: {
-                        wasmurl: libav.wasmurl
+                        variant: opts.variant || libav.variant,
+                        wasmurl: opts.wasmurl || libav.wasmurl
                     }
                 });
 
@@ -175,19 +331,34 @@
                                 ret.onwrite.apply(ret, args);
                         }, null],
                         onblockread: [function(args) {
-                            if (ret.onblockread)
-                                ret.onblockread.apply(ret, args);
+                            try {
+                                var brr = null;
+                                if (ret.onblockread)
+                                    brr = ret.onblockread.apply(ret, args);
+                                if (brr && brr.then && brr.catch) {
+                                    brr.catch(function(ex) {
+                                        ret.ff_block_reader_dev_send(args[0], args[1], null, {error: ex});
+                                    });
+                                }
+                            } catch (ex) {
+                                ret.ff_block_reader_dev_send(args[0], args[1], null, {error: ex});
+                            }
                         }, null]
                     };
 
                     // And passthru functions
                     ret.c = function() {
                         var msg = Array.prototype.slice.call(arguments);
+                        var transfer = [];
+                        for (var i = 0; i < msg.length; i++) {
+                            if (msg[i] && msg[i].libavjsTransfer)
+                                transfer.push.apply(transfer, msg[i].libavjs_create_main_thread);
+                        }
                         return new Promise(function(res, rej) {
                             var id = ret.on++;
                             msg = [id].concat(msg);
                             ret.handlers[id] = [res, rej];
-                            ret.worker.postMessage(msg);
+                            ret.worker.postMessage(msg, transfer);
                         });
                     };
                     function onworkermessage(e) {
@@ -214,7 +385,10 @@
                 /* Worker through Emscripten's own threads. Start with a real
                  * instance. */
                 return Promise.all([]).then(function() {
-                    return libav.LibAVFactory();
+                    return factory({
+                        wasmurl: opts.warmurl || libav.wasmurl,
+                        variant: opts.variant || libav.variant
+                    });
                 }).then(function(x) {
                     ret = x;
 
@@ -260,10 +434,24 @@
                             }
                         } else if (e.data && e.data.c === "libavjs_wait_reader") {
                             if (ret.readerDevReady(e.data.fd)) {
-                                worker.postMessage({c: "libavjs_wait_reader"});
+                                worker.postMessage({
+                                    c: "libavjs_wait_reader",
+                                    fd: e.data.fd
+                                });
                             } else {
-                                ret.ff_reader_dev_waiters.push(function() {
-                                    worker.postMessage({c: "libavjs_wait_reader"});
+                                var name = ret.fdName(e.data.fd);
+                                var waiters =
+                                    ret.ff_reader_dev_waiters[name];
+                                if (!waiters) {
+                                    waiters =
+                                        ret.ff_reader_dev_waiters[name] =
+                                        [];
+                                }
+                                waiters.push(function() {
+                                    worker.postMessage({
+                                        c: "libavjs_wait_reader",
+                                        fd: e.data.fd
+                                    });
                                 });
                             }
                         } else if (e.data && e.data.c === "libavjs_ready") {
@@ -288,7 +476,10 @@
             } else { // Direct mode
                 // Start with a real instance
                 return Promise.all([]).then(function() {
-                    return libav.LibAVFactory();
+                    return factory({
+                        wasmurl: opts.wasmurl || libav.wasmurl,
+                        variant: opts.variant || libav.variant
+                    });
                 }).then(function(x) {
                     ret = x;
                     ret.worker = false;
@@ -363,87 +554,15 @@
 
             }
 
-            // Some enumerations lifted directly from FFmpeg
-            function enume(vals, first) {
-                if (typeof first === undefined)
-                    first = 0;
-                var i = first;
-                vals.forEach(function(val) {
-                    ret[val] = i++;
-                });
-            }
-
-            // AV_OPT
-            ret.AV_OPT_SEARCH_CHILDREN = 1;
-
-            // AVMediaType
-            enume(["AVMEDIA_TYPE_UNKNOWN", "AVMEDIA_TYPE_VIDEO",
-                "AVMEDIA_TYPE_AUDIO", "AVMEDIA_TYPE_DATA", "AVMEDIA_TYPE_SUBTITLE",
-                "AVMEDIA_TYPE_ATTACHMENT"], -1);
-
-            // AVSampleFormat
-            enume(["AV_SAMPLE_FMT_NONE", "AV_SAMPLE_FMT_U8", "AV_SAMPLE_FMT_S16",
-                "AV_SAMPLE_FMT_S32", "AV_SAMPLE_FMT_FLT", "AV_SAMPLE_FMT_DBL",
-                "AV_SAMPLE_FMT_U8P", "AV_SAMPLE_FMT_S16P", "AV_SAMPLE_FMT_S32P",
-                "AV_SAMPLE_FMT_FLTP", "AV_SAMPLE_FMT_DBLP", "AV_SAMPLE_FMT_S64",
-                "AV_SAMPLE_FMT_S64P", "AV_SAMPLE_FMT_NB"], -1);
-
-            // AVPixelFormat
-            enume(["AV_PIX_FMT_NONE", "AV_PIX_FMT_YUV420P",
-                "AV_PIX_FMT_YUYV422", "AV_PIX_FMT_RGB24", "AV_PIX_FMT_BGR24",
-                "AV_PIX_FMT_YUV422P", "AV_PIX_FMT_YUV444P",
-                "AV_PIX_FMT_YUV410P", "AV_PIX_FMT_YUV411P", "AV_PIX_FMT_GRAY8",
-                "AV_PIX_FMT_MONOWHITE", "AV_PIX_FMT_MONOBLACK",
-                "AV_PIX_FMT_PAL8", "AV_PIX_FMT_YUVJ420P",
-                "AV_PIX_FMT_YUVJ422P", "AV_PIX_FMT_YUVJ444P",
-                "AV_PIX_FMT_UYVY422", "AV_PIX_FMT_UYYVYY411",
-                "AV_PIX_FMT_BGR8", "AV_PIX_FMT_BGR4", "AV_PIX_FMT_BGR4_BYTE",
-                "AV_PIX_FMT_RGB8", "AV_PIX_FMT_RGB4", "AV_PIX_FMT_RGB4_BYTE",
-                "AV_PIX_FMT_NV12", "AV_PIX_FMT_NV21", "AV_PIX_FMT_ARGB",
-                "AV_PIX_FMT_RGBA", "AV_PIX_FMT_ABGR", "AV_PIX_FMT_BGRA",
-                "AV_PIX_FMT_GRAY16BE", "AV_PIX_FMT_GRAY16LE",
-                "AV_PIX_FMT_YUV440P", "AV_PIX_FMT_YUVJ440P",
-                "AV_PIX_FMT_YUVA420P", "AV_PIX_FMT_RGB48BE",
-                "AV_PIX_FMT_RGB48LE", "AV_PIX_FMT_RGB565BE",
-                "AV_PIX_FMT_RGB565LE", "AV_PIX_FMT_RGB555BE",
-                "AV_PIX_FMT_RGB555LE", "AV_PIX_FMT_BGR565BE",
-                "AV_PIX_FMT_BGR565LE", "AV_PIX_FMT_BGR555BE",
-                "AV_PIX_FMT_BGR555LE"], -1);
-
-            // AVIO_FLAGs
-            ret.AVIO_FLAG_READ = 1;
-            ret.AVIO_FLAG_WRITE = 2;
-            ret.AVIO_FLAG_READ_WRITE = 3;
-            ret.AVIO_FLAG_NONBLOCK = 8;
-            ret.AVIO_FLAG_DIRECT = 0x8000;
-
-            // AVSEEK_FLAGs
-            ret.AVSEEK_FLAG_BACKWARD = 1;
-            ret.AVSEEK_FLAG_BYTE = 2;
-            ret.AVSEEK_FLAG_ANY = 4;
-            ret.AVSEEK_FLAG_FRAME = 8;
-
-            // AVDISCARDs
-            ret.AVDISCARD_NONE = -16;
-            ret.AVDISCARD_DEFAULT = 0;
-            ret.AVDISCARD_NONREF = 8;
-            ret.AVDISCARD_BIDIR = 16;
-            ret.AVDISCARD_NONINTRA = 24;
-            ret.AVDISCARD_NONKEY = 32;
-            ret.AVDISCARD_ALL = 48;
-
-            // Errors
-            enume(["E2BIG", "EPERM", "EADDRINUSE", "EADDRNOTAVAIL",
-                "EAFNOSUPPORT", "EAGAIN", "EALREADY", "EBADF", "EBADMSG",
-                "EBUSY", "ECANCELED", "ECHILD", "ECONNABORTED", "ECONNREFUSED",
-                "ECONNRESET", "EDEADLOCK"], 1);
-            ret.AVERROR_EOF = -0x20464f45;
+            // Apply the statics
+            Object.assign(ret, libavStatics);
 
             return ret;
         });
     }
 
-    if (nodejs)
-        module.exports = libav;
-
+@E5 if (nodejs)
+@E5     module.exports = libav;
 })();
+
+@E6 export default LibAV;

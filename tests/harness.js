@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Yahweasel and contributors
+ * Copyright (C) 2023, 2024 Yahweasel and contributors
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted.
@@ -13,6 +13,8 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+
+
 LibAVTestHarness = {
     tests: [],
     files: [],
@@ -20,8 +22,6 @@ LibAVTestHarness = {
     data: {},
     utils: {},
 
-    libAVVersion: "4.3.6.0",
-    libAVVariant: null,
     libAVOpts: null,
     libav: null,
 
@@ -49,8 +49,9 @@ LibAVTestHarness = {
     },
 
     readFile: async function(name) {
-        if (typeof process !== "undefined")
+        if (typeof process !== "undefined") {
             return require("fs/promises").readFile(name);
+        }
 
         const resp = await fetch(name);
         const ab = await resp.arrayBuffer();
@@ -66,11 +67,11 @@ LibAVTestHarness = {
     },
 
     LibAV: async function(opts, variant) {
-        variant = variant || "all";
-        if (variant !== this.libAVVariant) {
+        if (typeof LibAV === "undefined") {
             // Load a variant
-            const toImport = `../dist/libav-${this.libAVVersion}-${variant}.dbg.js`;
-            LibAV = {base: "../dist"};
+            const toImport = `../dist/libav-all.dbg.` +
+                "js";
+            LibAV = {};
             if (typeof process !== "undefined")
                 require(toImport);
             else if (typeof importScripts !== "undefined")
@@ -86,7 +87,6 @@ LibAVTestHarness = {
                 });
             }
 
-            this.libAVVariant = variant;
             if (this.libav) {
                 this.libav.terminate();
                 this.libav = null;
@@ -96,9 +96,7 @@ LibAVTestHarness = {
         if (!opts && this.libav)
             return this.libav;
 
-        opts = opts || this.libAVOpts;
-
-        const ret = await LibAV.LibAV(opts);
+        const ret = await LibAV.LibAV(opts || this.libAVOpts);
         if (!opts)
             this.libav = ret;
 
@@ -142,6 +140,10 @@ LibAVTestHarness = {
         for (const opt of opts) {
             oIdx++;
             this.files = [];
+            if (this.libav) {
+                this.libav.terminate();
+                this.libav = null;
+            }
             this.libAVOpts = opt;
 
             let idx = 0;
@@ -155,9 +157,9 @@ LibAVTestHarness = {
                     await test.func(this);
                 } catch (ex) {
                     this.printErr("\n" +
-                        JSON.stringify(this.libAVOpts) + "\n" +
-                        test.name + "\n" +
-                        ex + "\n" + ex.stack);
+                        `Error in test ${test.name}\n` +
+                        "Options: " + JSON.stringify(this.libAVOpts) + "\n" +
+                        `Error: ${ex}\n${ex.stack}`);
                     fails++;
                 }
             }
@@ -173,8 +175,10 @@ LibAVTestHarness = {
 
         this.printStatus("");
         this.printErr(`Complete. ${fails} tests failed.`);
+
+        return fails;
     }
 };
 
-if (typeof module !== "undefined")
-    module.exports = LibAVTestHarness;
+    if (typeof module !== "undefined")
+        module.exports = LibAVTestHarness;

@@ -5,6 +5,14 @@ all act like files, in keeping with the Unix standard (devices and pipes are
 files). Note that libav.js's filesystem is virtual, and has no connection to the
 real filesystem.
 
+Experimentally, libav.js also supports the `jsfetch` "protocol", which uses
+JavaScript's `fetch` function to stream data over HTTP or HTTPS. This is not
+currently enabled by default in any build (other than "all"), but using an
+experimental build with `jsfetch` enabled, simply use, e.g., the URL
+`jsfetch:https://example.com/video.mkv` to use fetch. `jsfetch` does not
+currently support seeking or writing, only reading in a stream. If you enable
+the HLS demuxer, `jsfetch` supports reading from HLS streams as well.
+
 
 ## Reading
 
@@ -96,7 +104,8 @@ When a read request is sent to a block reader device, libav.js invokes the
 `libav.onblockread` function with the following arguments: `(<name>, <position>,
 <length>)`. When `onblockread` is called, you are expected to send data to the
 named file at the given position; the length is merely informative, and you may
-send less or more data.
+send less or more data. If `onblockread` throws an exception (directly or in a
+promise), that exception will be passed through the reading process.
 
 To send data for a block reader device, use
 `libav.ff_block_reader_dev_send(<name>, <position>, <data>)`. You may *not* send
@@ -257,3 +266,15 @@ To create a streaming writer device, use `await
 libav.mkstreamwriterdev(<name>)`. Streaming writer devices are otherwise
 identical to block writer devices in every detail, including that they use
 `onwrite` as their callback, and include the position.
+
+### Writer filesystem
+
+If you're using a format that outputs multiple files, such as image2's
+frame-output, you can use a writer *filesystem* to make all files in a directory
+automatically act as block writer files. Use `await
+libav.mountwriterfs("/somepath")` to mount a writer filesystem to `"/somepath"`,
+at which point every file created under `"/somepath"` will act as a block
+writer, invoking `onwrite` with every write.
+
+When finished, you can use `await libav.unmount("/somepath")` to unmount the
+writer filesystem.

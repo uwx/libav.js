@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * Copyright (C) 2021-2023 Yahweasel
+ * Copyright (C) 2021-2024 Yahweasel
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted.
@@ -17,10 +17,13 @@
 const fs = require("fs");
 const name = process.argv[2];
 const parts = JSON.parse(process.argv[3]);
-const files = ["deps.txt", "ffmpeg-config.txt", "libs.txt", "license.js", "link-flags.txt"];
+const files = ["ffmpeg-config.txt", "libs.txt", "license.js", "link-flags.txt"];
 
 try {
-    fs.mkdirSync(name);
+    fs.mkdirSync("configs");
+} catch (ex) {}
+try {
+    fs.mkdirSync(`configs/${name}`);
 } catch (ex) {}
 
 function exists(f) {
@@ -41,6 +44,21 @@ function addFragment(out, part) {
                 out[file].write(fs.readFileSync(inF));
         }
 
+        // Add any dependencies
+        try {
+            const deps = fs.readFileSync(`fragments/${part}/deps.txt`, "utf8").split("\n");
+            for (const target of ["base", "thr"]) {
+                for (const dep of deps) {
+                    if (!dep) continue;
+                    out["deps.mk"].write(
+                        `build/ffmpeg-$(FFMPEG_VERSION)/build-${target}-${name}/ffbuild/config.mak: ` +
+                        dep.replace(/@TARGET/g, target) +
+                        "\n"
+                    );
+                }
+            }
+        } catch (ex) {}
+
     } else {
         // Look for meta options
         const res = /^([^-]*)-(.*)$/.exec(part);
@@ -59,11 +77,13 @@ function addFragment(out, part) {
             addFragment(out, `decoder-${res[2]}`);
             addFragment(out, `encoder-${res[2]}`);
 
-        } else if (res[1] === "demuxer" ||
+        } else if (res[1] === "protocol" ||
+                   res[1] === "demuxer" ||
                    res[1] === "muxer" ||
                    res[1] === "decoder" ||
                    res[1] === "encoder" ||
                    res[1] === "filter" ||
+                   res[1] === "parser" ||
                    res[1] === "bsf") {
             // Just add the ffmpeg config directly
             out["ffmpeg-config.txt"].write(
@@ -80,10 +100,13 @@ function addFragment(out, part) {
 
 
 (function() {
+    // Save the parts list
+    fs.writeFileSync(`configs/${name}/config.json`, JSON.stringify(parts) + "\n");
+
     // Open the files
     const out = {};
-    for (const file of files)
-        out[file] = fs.createWriteStream(`${name}/${file}`);
+    for (const file of files.concat(["deps.mk"]))
+        out[file] = fs.createWriteStream(`configs/${name}/${file}`);
 
     // Start the license header
     out["license.js"].write(fs.readFileSync("fragments/default/license-head.js"));

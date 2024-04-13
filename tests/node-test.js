@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * Copyright (C) 2023 Yahweasel and contributors
+ * Copyright (C) 2023, 2024 Yahweasel and contributors
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted.
@@ -38,10 +38,9 @@ async function main() {
         process.stderr.write("\x1b[K" + x + "\r");
     };
     await harness.loadTests(require("./suite.json"));
-    await harness.runTests([
+    process.exit(await harness.runTests([
         null,
-        {nosimd: true},
         {nowasm: true}
-    ]);
+    ]) ? 1 : 0);
 }
 main();

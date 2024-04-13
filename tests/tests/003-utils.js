@@ -37,7 +37,7 @@ h.utils.audioF32 = async function(file) {
         };
 
         await libav.ffmpeg(
-            "-nostdin", "-loglevel", "0",
+            "-nostdin", "-loglevel", "quiet",
             "-i", file,
             "-f", "f32le",
             "-ar", "48000",
@@ -48,7 +48,7 @@ h.utils.audioF32 = async function(file) {
     }
 
     if (file instanceof Array) {
-        if (file[0].data) {
+        if (file[0] && file[0].data) {
             if (file[0].data.buffer) {
                 // Frames of flat data
                 file = new Blob(file.map(x => x.data));
@@ -77,7 +77,6 @@ h.utils.compareAudio = async function(fileA, fileB, opts = {}) {
     dataB = await h.utils.audioF32(fileB);
     const len = Math.min(dataA.length, dataB.length);
     if (len <= 48000) {
-        console.error("\n\n " + dataA.length + " " + dataB.length + "\n\n");
         throw new Error(`Found short (nonexistent?) file while trying to compare ${nameA} and ${nameB}`);
     }
 
@@ -123,11 +122,20 @@ h.utils.videoYUV = async function(file) {
             // Gather together the planar data
             const parts = [];
             for (const frame of file) {
-                let lineWidth = frame.width;
-                for (const plane of frame.data) {
-                    for (const line of plane)
-                        parts.push(line.subarray(0, lineWidth));
-                    lineWidth = frame.width / 2;
+                for (let pi = 0; pi < frame.layout.length; pi++) {
+                    const plane = frame.layout[pi];
+                    let w = frame.width;
+                    let h = frame.height;
+                    if (pi === 1 || pi === 2) {
+                        w >>= 1;
+                        h >>= 1;
+                    }
+                    for (let y = 0; y < h; y++) {
+                        parts.push(frame.data.subarray(
+                            plane.offset + y * plane.stride,
+                            plane.offset + y * plane.stride + w
+                        ));
+                    }
                 }
             }
             file = new Blob(parts);

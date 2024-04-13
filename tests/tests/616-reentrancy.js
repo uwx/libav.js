@@ -15,6 +15,9 @@
 
 // Check for reentrancy issues by trying to do two files at once
 
+if (h.libAVOpts && h.libAVOpts.yesthreads)
+    throw new Error("Known bug: test 616 does not work with threads.");
+
 const libav = await h.LibAV();
 const buf = await h.readCachedFile("bbb.webm");
 
@@ -37,12 +40,12 @@ const [, c2, pkt2, frame2] = await libav.ff_init_decoder(
 async function reader(fmt_ctx, c, pkt, frame) {
     let frames = [];
     while (true) {
-        const [ret, packets] = await libav.ff_read_multi(fmt_ctx, pkt, null, {
+        const [ret, packets] = await libav.ff_read_frame_multi(fmt_ctx, pkt, {
             limit: 65536
         });
 
         if (ret !== libav.AVERROR_EOF && ret !== -libav.EAGAIN && ret !== 0)
-            throw new Error("Invalid return from ff_read_multi");
+            throw new Error("Invalid return from ff_read_frame_multi");
 
         if (!packets[1])
             continue;

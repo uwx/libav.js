@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023 Yahweasel and contributors
+ * Copyright (C) 2021-2024 Yahweasel and contributors
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted.
@@ -14,22 +14,39 @@
  */
 
 /**
+ * Things in libav.js with Worker transfer characteristics.
+ */
+export interface LibAVTransferable {
+    /**
+     * The elements to pass as transfers when passing this object to/from
+     * workers.
+     */
+    libavjsTransfer?: Transferable[];
+}
+
+/**
  * Frames, as taken/given by libav.js.
  */
-export interface Frame {
+export interface Frame extends LibAVTransferable {
     /**
      * The actual frame data. For non-planar audio data, this is a typed array.
      * For planar audio data, this is an array of typed arrays, one per plane.
-     * For video data, this is an array of planes, where each plane is in turn
-     * an array of typed arrays, one per line (because of how libav buffers
-     * lines).
+     * For video data, this is a single Uint8Array, and its layout is described
+     * by the layout field.
      */
-    data: any[];
+    data: any;
 
     /**
      * Sample format or pixel format.
      */
     format: number;
+
+    /**
+     * Video only. Layout of each plane within the data array. `offset` is the
+     * base offset of the plane, and `stride` is what libav calls `linesize`.
+     * This layout format is from WebCodecs.
+     */
+    layout?: {offset: number, stride: number}[];
 
     /**
      * Presentation timestamp for this frame. Units depends on surrounding
@@ -71,6 +88,11 @@ export interface Frame {
     height?: number;
 
     /**
+     * Video only. Cropping rectangle of the frame.
+     */
+    crop?: {top: number, bottom: number, left: number, right: number};
+
+    /**
      * Video only. Sample aspect ratio (pixel aspect ratio), as a numerator and
      * denominator. 0 is interpreted as 1 (square pixels).
      */
@@ -90,7 +112,7 @@ export interface Frame {
 /**
  * Packets, as taken/given by libav.js.
  */
-export interface Packet {
+export interface Packet extends LibAVTransferable {
     /**
      * The actual data represented by this packet.
      */
@@ -177,14 +199,46 @@ export interface Stream {
  */
 export interface FilterIOSettings {
     /**
+     * Type of filterchain, as an AVMEDIA_TYPE_*. If unset, defaults to
+     * AVMEDIA_TYPE_AUDIO.
+     */
+    type?: number;
+
+    /**
+     * The timebase for this filterchain. If unset, [1, frame_rate] or [1,
+     * sample_rate] will be used.
+     */
+    time_base?: [number, number];
+
+    /**
+     * Video only. Framerate of the input.
+     */
+    frame_rate?: number;
+
+    /**
      * Audio only. Sample rate of the input.
      */
     sample_rate?: number;
 
     /**
+     * Video only. Pixel format of the input.
+     */
+    pix_fmt?: number;
+
+    /**
      * Audio only. Sample format of the input.
      */
     sample_fmt?: number;
+
+    /**
+     * Video only. Width of the input.
+     */
+    width?: number;
+
+    /**
+     * Video only. Height of the input.
+     */
+    height?: number;
 
     /**
      * Audio only. Channel layout of the input. Note that there is no
@@ -229,78 +283,44 @@ export interface AVCodecContextProps {
     width?: number;
 }
 
-export interface LibAV {
+/**
+ * Static properties that are accessible both on the LibAV wrapper and on each
+ * libav instance.
+ */
+export interface LibAVStatic {
     /**
-     * The operating mode of this libav.js instance. Each operating mode has
-     * different constraints.
+     * Convert a pair of 32-bit integers representing a single 64-bit integer
+     * into a 64-bit float. 64-bit floats are only sufficient for 53 bits of
+     * precision, so for very large values, this is lossy.
+     * @param lo  Low bits of the pair
+     * @param hi  High bits of the pair
      */
-    libavjsMode: "direct" | "worker" | "threads";
-
-    /**
-     * If the operating mode is "worker", the worker itself.
-     */
-    worker?: Worker;
-
-@FUNCS
-@DECLS
-
-    // Declarations for things that use int64, so will be communicated incorrectly
+    i64tof64(lo: number, hi: number): number;
 
     /**
-     * Seek to timestamp ts, bounded by min_ts and max_ts. All 64-bit ints are
-     * in the form of low and high bits.
+     * Convert a 64-bit floating-point number into a pair of 32-bit integers
+     * representing a single 64-bit integer. The 64-bit float must actually
+     * contain an integer value for this result to be accurate.
+     * @param val  Floating-point value to convert
+     * @returns [low bits, high bits]
      */
-    avformat_seek_file(
-        s: number, stream_index: number, min_tslo: number, min_tshi: number,
-        tslo: number, tshi: number, max_tslo: number, max_tshi: number,
-        flags: number
-    ): Promise<number>;
+    f64toi64(val: number): [number, number];
 
     /**
-     * Seek to *at the earliest* the given timestamp.
+     * Convert a pair of 32-bit integers representing a single 64-bit integer
+     * into a BigInt. Requires BigInt support, of course.
+     * @param lo  Low bits of the pair
+     * @param hi  High bits of the pair
      */
-    avformat_seek_file_min(
-        s: number, stream_index: number, tslo: number, tshi: number,
-        flags: number
-    ): Promise<number>;
+    i64ToBigInt(lo: number, hi: number): BigInteger;
 
     /**
-     * Seek to *at the latest* the given timestamp.
+     * Convert a (64-bit) BigInt into a pair of 32-bit integers. Requires BigInt
+     * support, of course.
+     * @param val  BigInt value to convert
+     * @returns [low bits, high bits]
      */
-    avformat_seek_file_max(
-        s: number, stream_index: number, tslo: number, tshi: number,
-        flags: number
-    ): Promise<number>;
-
-    /**
-     * Seek to as close to this timestamp as the format allows.
-     */
-    avformat_seek_file_approx(
-        s: number, stream_index: number, tslo: number, tshi: number,
-        flags: number
-    ): Promise<number>;
-
-    /**
-     * Get the depth of this component of this pixel format.
-     */
-    AVPixFmtDescriptor_comp_depth(fmt: number, comp: number): Promise<number>;
-
-
-    /**
-     * Callback when writes occur. Set by the user.
-     */
-    onwrite?: (filename: string, position: number, buffer: Uint8Array | Int8Array) => void;
-
-    /**
-     * Callback for bock reader devices. Set by the user.
-     */
-    onblockread?: (filename: string, pos: number, length: number)  => void;
-
-    /**
-     * Terminate the worker associated with this libav.js instance, rendering
-     * it inoperable and freeing its memory.
-     */
-    terminate(): void;
+    bigIntToi64(val: BigInteger): [number, number];
 
     // Enumerations:
     AV_OPT_SEARCH_CHILDREN: number;
@@ -385,6 +405,20 @@ export interface LibAV {
     AVDISCARD_NONINTRA: number;
     AVDISCARD_NONKEY: number;
     AVDISCARD_ALL: number;
+    AV_LOG_QUIET: number;
+    AV_LOG_PANIC: number;
+    AV_LOG_FATAL: number;
+    AV_LOG_ERROR: number;
+    AV_LOG_WARNING: number;
+    AV_LOG_INFO: number;
+    AV_LOG_VERBOSE: number;
+    AV_LOG_DEBUG: number;
+    AV_LOG_TRACE: number;
+    AV_PKT_FLAG_KEY: number;
+    AV_PKT_FLAG_CORRUPT: number;
+    AV_PKT_FLAG_DISCARD: number;
+    AV_PKT_FLAG_TRUSTED: number;
+    AV_PKT_FLAG_DISPOSABLE: number;
     E2BIG: number;
     EPERM: number;
     EADDRINUSE: number;
@@ -401,14 +435,125 @@ export interface LibAV {
     ECONNREFUSED: number;
     ECONNRESET: number;
     EDEADLOCK: number;
+    EDESTADDRREQ: number;
+    EDOM: number;
+    EDQUOT: number;
+    EEXIST: number;
+    EFAULT: number;
+    EFBIG: number;
+    EHOSTUNREACH: number;
+    EIDRM: number;
+    EILSEQ: number;
+    EINPROGRESS: number;
+    EINTR: number;
+    EINVAL: number;
+    EIO: number;
+    EISCONN: number;
+    EISDIR: number;
+    ELOOP: number;
+    EMFILE: number;
+    EMLINK: number;
+    EMSGSIZE: number;
+    EMULTIHOP: number;
+    ENAMETOOLONG: number;
+    ENETDOWN: number;
+    ENETRESET: number;
+    ENETUNREACH: number;
+    ENFILE: number;
+    ENOBUFS: number;
+    ENODEV: number;
+    ENOENT: number;
     AVERROR_EOF: number;
 }
 
+/**
+ * A LibAV instance, created by LibAV.LibAV (*not* the LibAV wrapper itself)
+ */
+export interface LibAV extends LibAVStatic {
+    /**
+     * The operating mode of this libav.js instance. Each operating mode has
+     * different constraints.
+     */
+    libavjsMode: "direct" | "worker" | "threads";
+
+    /**
+     * If the operating mode is "worker", the worker itself.
+     */
+    worker?: Worker;
+
+@FUNCS
+@DECLS
+
+    // Declarations for things that use int64, so will be communicated incorrectly
+
+    /**
+     * Seek to timestamp ts, bounded by min_ts and max_ts. All 64-bit ints are
+     * in the form of low and high bits.
+     */
+    avformat_seek_file(
+        s: number, stream_index: number, min_tslo: number, min_tshi: number,
+        tslo: number, tshi: number, max_tslo: number, max_tshi: number,
+        flags: number
+    ): Promise<number>;
+
+    /**
+     * Seek to *at the earliest* the given timestamp.
+     */
+    avformat_seek_file_min(
+        s: number, stream_index: number, tslo: number, tshi: number,
+        flags: number
+    ): Promise<number>;
+
+    /**
+     * Seek to *at the latest* the given timestamp.
+     */
+    avformat_seek_file_max(
+        s: number, stream_index: number, tslo: number, tshi: number,
+        flags: number
+    ): Promise<number>;
+
+    /**
+     * Seek to as close to this timestamp as the format allows.
+     */
+    avformat_seek_file_approx(
+        s: number, stream_index: number, tslo: number, tshi: number,
+        flags: number
+    ): Promise<number>;
+
+    /**
+     * Get the depth of this component of this pixel format.
+     */
+    AVPixFmtDescriptor_comp_depth(fmt: number, comp: number): Promise<number>;
+
+
+    /**
+     * Callback when writes occur. Set by the user.
+     */
+    onwrite?: (filename: string, position: number, buffer: Uint8Array | Int8Array) => void;
+
+    /**
+     * Callback for bock reader devices. Set by the user.
+     */
+    onblockread?: (filename: string, pos: number, length: number) => void;
+
+    /**
+     * Terminate the worker associated with this libav.js instance, rendering
+     * it inoperable and freeing its memory.
+     */
+    terminate(): void;
+}
+
+/**
+ * Synchronous functions, available on non-worker libav.js instances.
+ */
 export interface LibAVSync {
 @SYNCFUNCS
 @SYNCDECLS
 }
 
+/**
+ * Options to create a libav.js instance.
+ */
 export interface LibAVOpts {
     /**
      * Don't create a worker.
@@ -419,11 +564,6 @@ export interface LibAVOpts {
      * Don't use WebAssembly.
      */
     nowasm?: boolean;
-
-    /**
-     * Don't use WebAssembly SIMD.
-     */
-    nosimd?: boolean;
 
     /**
      * Use threads. If threads ever become reliable, this flag will disappear,
@@ -437,21 +577,52 @@ export interface LibAVOpts {
     nothreads?: boolean;
 
     /**
+     * Don't use ES6 modules for loading, even if libav.js was compiled as an
+     * ES6 module.
+     */
+    noes6?: boolean;
+
+    /**
      * URL base from which to load workers and modules.
      */
     base?: string;
+
+    /**
+     * URL from which to load the module factory.
+     */
+    toImport?: string;
+
+    /**
+     * The module factory to use itself.
+     */
+    factory?: any;
+
+    /**
+     * The variant to load (instead of whichever variant was compiled)
+     */
+    variant?: string;
+
+    /**
+     * The full URL from which to load the .wasm file.
+     */
+    wasmurl?: string;
 }
 
-export interface LibAVWrapper {
-    /**
-     * URL base from which load workers and modules.
-     */
-    base: string;
-
+/**
+ * The main wrapper for libav.js, typically named "LibAV".
+ */
+export interface LibAVWrapper extends LibAVOpts, LibAVStatic {
     /**
      * Create a LibAV instance.
      * @param opts  Options
      */
     LibAV(opts?: LibAVOpts & {noworker?: false}): Promise<LibAV>;
     LibAV(opts: LibAVOpts & {noworker: true}): Promise<LibAV & LibAVSync>;
+    LibAV(opts: LibAVOpts): Promise<LibAV | LibAV & LibAVSync>;
 }
+
+/**
+ * If using ES6, the main export.
+ */
+declare const LibAV: LibAVWrapper;
+export default LibAV;

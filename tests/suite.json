@@ -36,5 +36,12 @@
  "616-reentrancy.js",
  "617-discard.js",
  "618-errno.js",
+ "619-block-reader-error-passthru.js",
+ "620-writer-fs.js",
+ "621-alt-variant.js",
+ "622-video-imagedata.js",
+ "623-decode-and-filter.js",
+ "624-decode-and-filter-combined.js",
+ "625-filtering-video.js",
  "650-all-to-all.js"
 ]

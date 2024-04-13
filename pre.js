@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2023 Yahweasel and contributors
+ * Copyright (C) 2019-2024 Yahweasel and contributors
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted.
@@ -16,8 +16,8 @@
 // Import LibAV.base if applicable
 if (typeof _scriptDir === "undefined") {
     if (typeof LibAV === "object" && LibAV && LibAV.base)
-        _scriptDir = LibAV.base + "/";
-    else
+        _scriptDir = LibAV.base + "/libav-@VER-@VARIANT.@DBG@TARGET.@JS";
+    else if (typeof self && self && self.location)
         _scriptDir = self.location.href;
 }
 
@@ -25,13 +25,11 @@ Module.locateFile = function(path, prefix) {
     // if it's the wasm file
     if (path.lastIndexOf(".wasm") === path.length - 5 &&
         path.indexOf("libav-") !== -1) {
-        // Consider using an overridden wasm URL
-        var gt;
-        if (typeof globalThis !== "undefined") gt = globalThis;
-        else if (typeof self !== "undefined") gt = self;
-        else gt = window;
-        if (gt.LibAV && gt.LibAV.wasmurl)
-            return gt.LibAV.wasmurl;
+        // Look for overrides
+        if (Module.wasmurl)
+            return Module.wasmurl;
+        if (Module.variant)
+            return prefix + "libav-@VER-" + Module.variant + ".@DBG@TARGET.wasm";
     }
 
     // Otherwise, use the default

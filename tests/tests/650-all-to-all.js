@@ -15,15 +15,26 @@
 
 // Convert between all (viable) formats and test that they all work
 
+const mp4 = ["libopenh264", "aac"];
 const formatCodecs = {
+    "adts": [null, null],
     "f32le": [null, "pcm_f32le", {nocheck: true}],
     "flac": [null, "flac"],
-    "ipod": ["libopenh264", "aac"],
-    "mov": ["libopenh264", "aac"],
+    "hls": [null, null],
+    "image2": [null, null],
+    "ipod": mp4,
+    "latm": [null, null],
+    "mov": mp4,
     "mp3": [null, "libmp3lame"],
+    "mp4": mp4,
+    "mpegts": mp4,
     "rawvideo": ["rawvideo", null, {nocheck: true}],
     "wav": [null, "pcm_s16le"],
     "wv": [null, "wavpack"]
+};
+
+const codecFormats = {
+    "qtrle": "mov"
 };
 
 async function stdoutFile(libav) {
@@ -37,12 +48,7 @@ async function stdoutFile(libav) {
 }
 
 async function getStdout(libav) {
-    try {
     return await libav.readFile("stdout", {encoding: "utf8"});
-    } catch (ex) {
-        console.log(ex);
-        throw ex;
-    }
 }
 
 // First, we need a list of all encoders
@@ -118,12 +124,15 @@ for (const cv of encoders.video) {
         break;
 
     // Even in slow-mode, skip VP9 and AV1, because they're just too slow!
-    if (cv === "libvpx-vp9" || cv === "libaom-av1")
+    if (cv === "libvpx-vp9" || cv === "libaom-av1" || cv === "libsvtav1")
         continue;
 
     // Transcode this
     h.printStatus(`-c:v ${cv}`);
-    const out = `tmp-${cv}.mkv`;
+    let format = codecFormats[cv];
+    if (!format)
+        format = "mkv";
+    const out = `tmp-${cv}.${format}`;
     const ret = await libav.ffmpeg(
         "-nostdin",
         "-i", "bbb.webm",
@@ -139,7 +148,10 @@ for (const cv of encoders.video) {
 // Then try each audio encoder
 for (const ca of encoders.audio) {
     h.printStatus(`-c:a ${ca}`);
-    const out = `tmp-${ca}.mkv`;
+    let format = codecFormats[ca];
+    if (!format)
+        format = "mkv";
+    const out = `tmp-${ca}.${format}`;
     const ret = await libav.ffmpeg(
         "-nostdin",
         "-i", "bbb.webm",
