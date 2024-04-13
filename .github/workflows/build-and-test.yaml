@@ -7,7 +7,8 @@ env:
   EM_CACHE_FOLDER: 'cache-emsdk'
 
 jobs:
-  build-and-test:
+  build:
+    # This should be ubuntu-latest, but as of 2023-10-06ish, it has problems
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
@@ -16,48 +17,11 @@ jobs:
         with:
           node-version: '18'
 
-      - uses: actions/cache@v3
-        name: Cache system libraries
-        with:
-          path: ${{env.EM_CACHE_FOLDER}}
-          key: ${{env.EM_VERSION}}-${{ runner.os }}-${{github.job}}
-
       - uses: mymindstorm/setup-emsdk@v12
         with:
           version: ${{env.EM_VERSION}}
-          #actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
+          actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
           no-cache: true
-
-      - uses: actions/cache@v3
-        name: Cache dependencies
-        with:
-          key: cache-dependencies-${{ hashFiles('mk/*') }}-${{ runner.os }}-${{github.job}}
-          path: build/*.tar*
-
-      - name: Generate configs
-        run: |
-          cd configs
-          node mkconfigs
-          cd ..
-
-      - run: make extract
-
-      - uses: bhowell2/github-substring-action@1.0.2
-        id: sha
-        with:
-          value: ${{ github.sha }}
-          length_from_start: 7
-
-      - run: npm test
-
-  full-release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
 
       - uses: actions/cache@v3
         name: Cache system libraries
@@ -65,16 +29,10 @@ jobs:
           path: ${{env.EM_CACHE_FOLDER}}
           key: ${{env.EM_VERSION}}-${{ runner.os }}-${{github.job}}
 
-      - uses: mymindstorm/setup-emsdk@v12
-        with:
-          version: ${{env.EM_VERSION}}
-          #actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
-          no-cache: true
-
       - uses: actions/cache@v3
         name: Cache dependencies
         with:
-          key: cache-dependencies-${{ hashFiles('mk/*') }}-${{ runner.os }}-${{github.job}}
+          key: cache-dependencies-${{ hashFiles('mk/*') }}
           path: build/*.tar*
 
       - name: Generate configs
@@ -95,83 +53,9 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: complete build
+          name: build
           path: libav.js-*.zip
 
-  build-variant:
-    strategy:
-      fail-fast: false
-      matrix:
-        variant: [default, lite, fat, obsolete, opus, flac, opus-flac, webm, webm-opus-flac, mediarecorder-transcoder, open-media, webcodecs, all-audio-cli, rawvideo, h265, prores, mediarecorder-transcoder, all, extreme]
-
-    if: |
-      !contains(github.event.head_commit.message, 'skip ci')
-
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      - uses: actions/cache@v3
-        name: Cache system libraries
-        with:
-          path: ${{env.EM_CACHE_FOLDER}}
-          key: ${{env.EM_VERSION}}-${{ runner.os }}-${{github.job}}-${{matrix.variant}}
-
-      - uses: mymindstorm/setup-emsdk@v12
-        with:
-          version: ${{env.EM_VERSION}}
-          #actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
-          no-cache: true
-
-      - uses: actions/cache@v3
-        name: Cache dependencies
-        with:
-          key: cache-dependencies-${{ hashFiles('mk/*') }}-${{ runner.os }}-${{github.job}}
-          path: build/*.tar*
-
-      - name: Generate configs
-        run: |
-          cd configs
-          node mkconfigs
-          cd ..
-
-      - run: make extract
-
-      - uses: bhowell2/github-substring-action@1.0.2
-        id: sha
-        with:
-          value: ${{ github.sha }}
-          length_from_start: 7
-
-      - run: |-2
-          LIBAVJS_VERSION_SUFFIX=-${{ steps.sha.outputs.substring }}
-          LIBAVJS_VERSION="4.3.6.0$LIBAVJS_VERSION_SUFFIX"
-          mkdir libav.js-$LIBAVJS_VERSION
-          cp -a README.md docs libav.js-$LIBAVJS_VERSION/
-          mkdir libav.js-$LIBAVJS_VERSION/dist
-          for v in ${{matrix.variant}};
-          do
-            make build-$v LIBAVJS_VERSION_SUFFIX=-${{ steps.sha.outputs.substring }}
-            cp dist/libav-$LIBAVJS_VERSION-$v.* libav.js-$LIBAVJS_VERSION/dist
-          done
-          cp dist/libav.types.d.ts libav.js-$LIBAVJS_VERSION/dist/
-          mkdir libav.js-$LIBAVJS_VERSION/sources
-          for t in ffmpeg lame libaom libogg libvorbis libvpx opus;
-          do
-            make $t-release LIBAVJS_VERSION_SUFFIX=-${{ steps.sha.outputs.substring }}
-          done
-          git archive HEAD -o libav.js-$LIBAVJS_VERSION/sources/libav.js.tar
-          xz libav.js-$LIBAVJS_VERSION/sources/libav.js.tar
-          #zip -r libav.js-$LIBAVJS_VERSION.zip libav.js-$LIBAVJS_VERSION
-          #rm -rf libav.js-$LIBAVJS_VERSION
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: libav.js ${{matrix.variant}}
-          path: libav.js-*
-
-  
+      #- run: make
+      #- run: make build-all
+      #- run: npm test
