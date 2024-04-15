@@ -15,7 +15,8 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
 
       - uses: mymindstorm/setup-emsdk@v12
         with:
@@ -56,6 +57,23 @@ jobs:
           name: build
           path: dist/release/libav.js-*.zip
 
+      - run: |
+          FFMPEG_VERSION_MAJOR=6
+          FFMPEG_VERSION_MINREV=1.1
+          FFMPEG_VERSION=$(FFMPEG_VERSION_MAJOR).$(FFMPEG_VERSION_MINREV)
+
+          LIBAVJS_VERSION_BASE=5.1
+          LIBAVJS_VERSION_SUFFIX=-${{ steps.sha.outputs.substring }}
+          LIBAVJS_VERSION=$(LIBAVJS_VERSION_BASE).$(FFMPEG_VERSION)$(LIBAVJS_VERSION_SUFFIX)
+
+          cd dist/release && unzip libav.js-$(LIBAVJS_VERSION).zip
+          cd dist/release/libav.js-$(LIBAVJS_VERSION) && \
+            cp ../../../package.json . && \
+            rm -f dist/*.dbg.* dist/*.asm.mjs && \
+            npm publish --access=public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+  
       #- run: make
       #- run: make build-all
       #- run: npm test
