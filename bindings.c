@@ -410,6 +410,32 @@ void AVStream_time_base_s(AVStream *a, int n, int d) {
     a->time_base.den = d;
 }
 
+int AVStream_avg_frame_rate_num(AVStream *a) {
+    return a->avg_frame_rate.num;
+}
+
+int AVStream_avg_frame_rate_den(AVStream *a) {
+    return a->avg_frame_rate.den;
+}
+
+void AVStream_avg_frame_rate_s(AVStream *a, int n, int d) {
+    a->avg_frame_rate.num = n;
+    a->avg_frame_rate.den = d;
+}
+
+int AVStream_r_frame_rate_num(AVStream *a) {
+    return a->r_frame_rate.num;
+}
+
+int AVStream_r_frame_rate_den(AVStream *a) {
+    return a->r_frame_rate.den;
+}
+
+void AVStream_r_frame_rate_s(AVStream *a, int n, int d) {
+    a->r_frame_rate.num = n;
+    a->r_frame_rate.den = d;
+}
+
 int avformat_seek_file_min(
     AVFormatContext *s, int stream_index, int64_t ts, int flags
 ) {
