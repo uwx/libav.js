@@ -17,7 +17,7 @@ build/libvpx-$(LIBVPX_VERSION)/build-%/Makefile: build/libvpx-$(LIBVPX_VERSION)/
 		emconfigure ../../libvpx-$(LIBVPX_VERSION)/configure \
 			--prefix="$(PWD)/build/inst/$*" \
 			--target=generic-gnu \
-			--extra-cflags="-Oz `cat $(PWD)/build/inst/$*/cflags.txt`" \
+			--extra-cflags="-O3 -flto -msimd128 `cat $(PWD)/build/inst/$*/cflags.txt`" \
 			--enable-static --disable-shared \
 			--disable-webm-io \
 			--disable-examples --disable-tools --disable-docs
