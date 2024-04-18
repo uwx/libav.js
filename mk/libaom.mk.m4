@@ -18,8 +18,8 @@ build/libaom-$(LIBAOM_VERSION)/build-$1/Makefile: build/libaom-$(LIBAOM_VERSION)
 	cd build/libaom-$(LIBAOM_VERSION)/build-$1 && \
 		emcmake cmake ../../libaom-$(LIBAOM_VERSION) \
 		-DCMAKE_INSTALL_PREFIX="$(PWD)/build/inst/$1" \
-		-DCMAKE_C_FLAGS="-Oz `cat $(PWD)/build/inst/$1/cflags.txt`" \
-		-DCMAKE_CXX_FLAGS="-Oz `cat $(PWD)/build/inst/$1/cflags.txt`" \
+		-DCMAKE_C_FLAGS="-O3 -flto -msimd128 `cat $(PWD)/build/inst/$1/cflags.txt`" \
+		-DCMAKE_CXX_FLAGS="-O3 -flto -msimd128 `cat $(PWD)/build/inst/$1/cflags.txt`" \
 		-DAOM_TARGET_CPU=generic \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DENABLE_DOCS=0 \
