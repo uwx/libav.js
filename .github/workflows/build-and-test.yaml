@@ -73,7 +73,7 @@ jobs:
           LIBAVJS_VERSION="$LIBAVJS_VERSION_BASE.$FFMPEG_VERSION$LIBAVJS_VERSION_SUFFIX"
 
           cd dist/release && unzip libav.js-$LIBAVJS_VERSION.zip
-          cd dist/release/libav.js-$LIBAVJS_VERSION && \
+          cd libav.js-$LIBAVJS_VERSION && \
             cp ../../../package.json . && \
             rm -f dist/*.dbg.* dist/*.asm.mjs && \
             npm publish --access=public
