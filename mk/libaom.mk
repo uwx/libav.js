@@ -21,8 +21,8 @@ build/libaom-$(LIBAOM_VERSION)/build-base/Makefile: build/libaom-$(LIBAOM_VERSIO
 	cd build/libaom-$(LIBAOM_VERSION)/build-base && \
 		emcmake cmake ../../libaom-$(LIBAOM_VERSION) \
 		-DCMAKE_INSTALL_PREFIX="$(PWD)/build/inst/base" \
-		-DCMAKE_C_FLAGS="-Oz `cat $(PWD)/build/inst/base/cflags.txt`" \
-		-DCMAKE_CXX_FLAGS="-Oz `cat $(PWD)/build/inst/base/cflags.txt`" \
+		-DCMAKE_C_FLAGS="-O3 -flto -msimd128 `cat $(PWD)/build/inst/base/cflags.txt`" \
+		-DCMAKE_CXX_FLAGS="-O3 -flto -msimd128 `cat $(PWD)/build/inst/base/cflags.txt`" \
 		-DAOM_TARGET_CPU=generic \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DENABLE_DOCS=0 \
@@ -40,8 +40,8 @@ build/libaom-$(LIBAOM_VERSION)/build-thr/Makefile: build/libaom-$(LIBAOM_VERSION
 	cd build/libaom-$(LIBAOM_VERSION)/build-thr && \
 		emcmake cmake ../../libaom-$(LIBAOM_VERSION) \
 		-DCMAKE_INSTALL_PREFIX="$(PWD)/build/inst/thr" \
-		-DCMAKE_C_FLAGS="-Oz `cat $(PWD)/build/inst/thr/cflags.txt`" \
-		-DCMAKE_CXX_FLAGS="-Oz `cat $(PWD)/build/inst/thr/cflags.txt`" \
+		-DCMAKE_C_FLAGS="-O3 -flto -msimd128 `cat $(PWD)/build/inst/thr/cflags.txt`" \
+		-DCMAKE_CXX_FLAGS="-O3 -flto -msimd128 `cat $(PWD)/build/inst/thr/cflags.txt`" \
 		-DAOM_TARGET_CPU=generic \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DENABLE_DOCS=0 \

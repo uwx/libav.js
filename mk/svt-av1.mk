@@ -21,8 +21,8 @@ build/SVT-AV1-v$(SVT_AV1_VERSION)/build-base/Makefile: build/SVT-AV1-v$(SVT_AV1_
 	cd build/SVT-AV1-v$(SVT_AV1_VERSION)/build-base && \
 		emcmake cmake ../../SVT-AV1-v$(SVT_AV1_VERSION) \
 		-DCMAKE_INSTALL_PREFIX="$(PWD)/build/inst/base" \
-		-DCMAKE_C_FLAGS="-Oz `cat $(PWD)/build/inst/base/cflags.txt`" \
-		-DCMAKE_CXX_FLAGS="-Oz `cat $(PWD)/build/inst/base/cflags.txt`" \
+		-DCMAKE_C_FLAGS="-O3 -flto -msimd128 `cat $(PWD)/build/inst/base/cflags.txt`" \
+		-DCMAKE_CXX_FLAGS="-O3 -flto -msimd128 `cat $(PWD)/build/inst/base/cflags.txt`" \
 		-DCMAKE_BUILD_TYPE=Release \
                 
 	touch $(@)
@@ -34,8 +34,8 @@ build/SVT-AV1-v$(SVT_AV1_VERSION)/build-thr/Makefile: build/SVT-AV1-v$(SVT_AV1_V
 	cd build/SVT-AV1-v$(SVT_AV1_VERSION)/build-thr && \
 		emcmake cmake ../../SVT-AV1-v$(SVT_AV1_VERSION) \
 		-DCMAKE_INSTALL_PREFIX="$(PWD)/build/inst/thr" \
-		-DCMAKE_C_FLAGS="-Oz `cat $(PWD)/build/inst/thr/cflags.txt`" \
-		-DCMAKE_CXX_FLAGS="-Oz `cat $(PWD)/build/inst/thr/cflags.txt`" \
+		-DCMAKE_C_FLAGS="-O3 -flto -msimd128 `cat $(PWD)/build/inst/thr/cflags.txt`" \
+		-DCMAKE_CXX_FLAGS="-O3 -flto -msimd128 `cat $(PWD)/build/inst/thr/cflags.txt`" \
 		-DCMAKE_BUILD_TYPE=Release \
                 
 	touch $(@)
