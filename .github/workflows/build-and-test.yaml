@@ -102,6 +102,11 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install LLVM and Clang
+        uses: uwx/install-llvm-action@master
+        with:
+          version: "18.1.4"
+
       - uses: actions/cache@v3
         name: Cache system libraries
         with:
