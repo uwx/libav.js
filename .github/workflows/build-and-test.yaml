@@ -152,7 +152,7 @@ jobs:
             cp dist/libav-$LIBAVJS_VERSION-$v.* libav.js-$LIBAVJS_VERSION/dist
           done
 
-          mkdir dist/release/libav.js-$LIBAVJS_VERSION/sources
+          mkdir dist/libav.js-$LIBAVJS_VERSION/sources
 
           for t in ffmpeg lame libaom libogg libvorbis libvpx opus;
           do
