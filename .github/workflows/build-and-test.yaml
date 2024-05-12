@@ -135,8 +135,14 @@ jobs:
           length_from_start: 7
 
       - run: |-
-          LIBAVJS_VERSION_SUFFIX=-${{ steps.sha.outputs.substring }}
-          LIBAVJS_VERSION="4.3.6.0$LIBAVJS_VERSION_SUFFIX"
+          FFMPEG_VERSION_MAJOR="6"
+          FFMPEG_VERSION_MINREV="1.1"
+          FFMPEG_VERSION="$FFMPEG_VERSION_MAJOR.$FFMPEG_VERSION_MINREV"
+
+          LIBAVJS_VERSION_BASE="5.1"
+          LIBAVJS_VERSION_SUFFIX="-${{ steps.sha.outputs.substring }}"
+          LIBAVJS_VERSION="$LIBAVJS_VERSION_BASE.$FFMPEG_VERSION$LIBAVJS_VERSION_SUFFIX"
+
           mkdir libav.js-$LIBAVJS_VERSION
           cp -a README.md docs libav.js-$LIBAVJS_VERSION/
           mkdir libav.js-$LIBAVJS_VERSION/dist
@@ -145,12 +151,15 @@ jobs:
             make build-$v LIBAVJS_VERSION_SUFFIX=-${{ steps.sha.outputs.substring }}
             cp dist/libav-$LIBAVJS_VERSION-$v.* libav.js-$LIBAVJS_VERSION/dist
           done
+
           cp dist/libav.types.d.ts libav.js-$LIBAVJS_VERSION/dist/
           mkdir libav.js-$LIBAVJS_VERSION/sources
+
           for t in ffmpeg lame libaom libogg libvorbis libvpx opus;
           do
             make $t-release LIBAVJS_VERSION_SUFFIX=-${{ steps.sha.outputs.substring }}
           done
+
           git archive HEAD -o libav.js-$LIBAVJS_VERSION/sources/libav.js.tar
           xz libav.js-$LIBAVJS_VERSION/sources/libav.js.tar
           #zip -r libav.js-$LIBAVJS_VERSION.zip libav.js-$LIBAVJS_VERSION
