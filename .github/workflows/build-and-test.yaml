@@ -241,7 +241,7 @@ jobs:
           path: dist/release/libav.js-*.zip
 
       - run: |
-          cd dist/release/libav.js-$LIBAVJS_VERSION-$VARIANT
+          cd dist/release/libav.js-$LIBAVJS_VERSION-${{matrix.variant}}
           npm publish --access=public
 
       - uses: actions/upload-artifact@v3
