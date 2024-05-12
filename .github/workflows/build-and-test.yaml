@@ -12,6 +12,17 @@ permissions:
 jobs:
   pre:
     runs-on: ubuntu-20.04
+    env:
+      FFMPEG_VERSION_MAJOR: 'unset'
+      FFMPEG_VERSION_MINREV: 'unset'
+      FFMPEG_VERSION: 'unset'
+
+      LIBAVJS_VERSION_BASE: 'unset'
+      LIBAVJS_VERSION_SUFFIX: 'unset'
+      LIBAVJS_VERSION: 'unset'
+
+      GITHUB_SHA_SHORT: 'unset'
+
     steps:
       - name: Generate build number
         id: buildnumber
@@ -19,36 +30,32 @@ jobs:
         with:
           token: ${{ github.token }}
 
-      - name: Get commit SHA
-        uses: bhowell2/github-substring-action@1.0.2
-        id: sha
-        with:
-          value: ${{ github.sha }}
-          length_from_start: 7
-
       - run: |
           FFMPEG_VERSION_MAJOR="6"
           FFMPEG_VERSION_MINREV="1.1"
           FFMPEG_VERSION="$FFMPEG_VERSION_MAJOR.$FFMPEG_VERSION_MINREV"
 
-          SHA="${{ steps.sha.outputs.substring }}"
+          GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-6)
+
+          echo "GITHUB_SHA_SHORT=$GITHUB_SHA_SHORT" >> "$GITHUB_ENV"
+
           BUILD_NUMBER="${{ steps.buildnumber.outputs.build_number }}"
 
           LIBAVJS_VERSION_BASE="6.0.0"
-          LIBAVJS_VERSION_SUFFIX="-nightly.$BUILD_NUMBER.$SHA+ffmpeg-$FFMPEG_VERSION"
+          LIBAVJS_VERSION_SUFFIX="-nightly.$BUILD_NUMBER.$GITHUB_SHA_SHORT+ffmpeg-$FFMPEG_VERSION"
           LIBAVJS_VERSION="$LIBAVJS_VERSION_BASE$LIBAVJS_VERSION_SUFFIX"
 
-          echo "FFMPEG_VERSION_MAJOR=$FFMPEG_VERSION_MAJOR" >> $GITHUB_ENV
-          echo "FFMPEG_VERSION_MINREV=$FFMPEG_VERSION_MINREV" >> $GITHUB_ENV
-          echo "FFMPEG_VERSION=$FFMPEG_VERSION" >> $GITHUB_ENV
+          echo "FFMPEG_VERSION_MAJOR=$FFMPEG_VERSION_MAJOR" >> "$GITHUB_ENV"
+          echo "FFMPEG_VERSION_MINREV=$FFMPEG_VERSION_MINREV" >> "$GITHUB_ENV"
+          echo "FFMPEG_VERSION=$FFMPEG_VERSION" >> "$GITHUB_ENV"
 
-          echo "LIBAVJS_VERSION_BASE=$LIBAVJS_VERSION_BASE" >> $GITHUB_ENV
-          echo "LIBAVJS_VERSION_SUFFIX=$LIBAVJS_VERSION_SUFFIX" >> $GITHUB_ENV
-          echo "LIBAVJS_VERSION=$LIBAVJS_VERSION" >> $GITHUB_ENV
+          echo "LIBAVJS_VERSION_BASE=$LIBAVJS_VERSION_BASE" >> "$GITHUB_ENV"
+          echo "LIBAVJS_VERSION_SUFFIX=$LIBAVJS_VERSION_SUFFIX" >> "$GITHUB_ENV"
+          echo "LIBAVJS_VERSION=$LIBAVJS_VERSION" >> "$GITHUB_ENV"
 
     outputs:
       build_number: ${{ steps.buildnumber.outputs.build_number }}
-      sha: ${{ steps.sha.outputs.substring }}
+      sha: ${{ env.GITHUB_SHA_SHORT }}
 
       FFMPEG_VERSION_MAJOR: ${{ env.FFMPEG_VERSION_MAJOR }}
       FFMPEG_VERSION_MINREV: ${{ env.FFMPEG_VERSION_MINREV }}
@@ -59,82 +66,83 @@ jobs:
       LIBAVJS_VERSION: ${{ env.LIBAVJS_VERSION }}
 
 
-  build:
-    # This should be ubuntu-24.04, but as of 2023-10-06ish, it has problems
-    runs-on: ubuntu-20.04
-    needs: [pre]
-    env:
-      FFMPEG_VERSION_MAJOR: ${{ needs.pre.outputs.FFMPEG_VERSION_MAJOR }}
-      FFMPEG_VERSION_MINREV: ${{ needs.pre.outputs.FFMPEG_VERSION_MINREV }}
-      FFMPEG_VERSION: ${{ needs.pre.outputs.FFMPEG_VERSION }}
-      LIBAVJS_VERSION_BASE: ${{ needs.pre.outputs.LIBAVJS_VERSION_BASE }}
-      LIBAVJS_VERSION_SUFFIX: ${{ needs.pre.outputs.LIBAVJS_VERSION_SUFFIX }}
-      LIBAVJS_VERSION: ${{ needs.pre.outputs.LIBAVJS_VERSION }}
+  #build:
+  #  # This should be ubuntu-24.04, but as of 2023-10-06ish, it has problems
+  #  runs-on: ubuntu-20.04
+  #  needs: [pre]
+  #  env:
+  #    FFMPEG_VERSION_MAJOR: ${{ needs.pre.outputs.FFMPEG_VERSION_MAJOR }}
+  #    FFMPEG_VERSION_MINREV: ${{ needs.pre.outputs.FFMPEG_VERSION_MINREV }}
+  #    FFMPEG_VERSION: ${{ needs.pre.outputs.FFMPEG_VERSION }}
+  #    LIBAVJS_VERSION_BASE: ${{ needs.pre.outputs.LIBAVJS_VERSION_BASE }}
+  #    LIBAVJS_VERSION_SUFFIX: ${{ needs.pre.outputs.LIBAVJS_VERSION_SUFFIX }}
+  #    LIBAVJS_VERSION: ${{ needs.pre.outputs.LIBAVJS_VERSION }}
 
-    if: "!contains(github.event.head_commit.message, 'skip ci')"
+  #  if: '!contains(github.event.head_commit.message, "skip ci")'
 
-    steps:
-      - uses: actions/checkout@v3
+  #  steps:
+  #    - uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
+  #    - uses: actions/setup-node@v3
+  #      with:
+  #        node-version: '20'
+  #        registry-url: 'https://registry.npmjs.org'
 
-      - uses: mymindstorm/setup-emsdk@v12
-        with:
-          version: ${{env.EM_VERSION}}
-          actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
-          no-cache: true
+  #    - uses: mymindstorm/setup-emsdk@v12
+  #      with:
+  #        version: ${{env.EM_VERSION}}
+  #        actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
+  #        no-cache: true
 
-      - uses: actions/cache@v3
-        name: Cache system libraries
-        with:
-          path: ${{env.EM_CACHE_FOLDER}}
-          key: ${{env.EM_VERSION}}-${{ runner.os }}-${{github.job}}
+  #    - uses: actions/cache@v3
+  #      name: Cache system libraries
+  #      with:
+  #        path: ${{env.EM_CACHE_FOLDER}}
+  #        key: ${{env.EM_VERSION}}-${{ runner.os }}-${{github.job}}
 
-      - uses: actions/cache@v3
-        name: Cache dependencies
-        with:
-          key: cache-dependencies-${{ hashFiles('mk/*') }}
-          path: build/*.tar*
+  #    - uses: actions/cache@v3
+  #      name: Cache dependencies
+  #      with:
+  #        key: cache-dependencies-${{ hashFiles('mk/*') }}
+  #        path: build/*.tar*
 
-      - name: 'Run m4 on all *.m4 files'
-        run: |
-          for i in $(find -name "*.m4"); do
-            m4 $i > "$(dirname $i)/$(basename $i .m4)"
-          done
+  #    - name: 'Run m4 on all *.m4 files'
+  #      run: |
+  #        for i in $(find -name "*.m4"); do
+  #          m4 $i > "$(dirname $i)/$(basename $i .m4)"
+  #        done
 
-      - name: Generate configs
-        run: |
-          cd configs
-          node mkconfigs
-          cd ..
+  #    - name: Generate configs
+  #      run: |
+  #        cd configs
+  #        node mkconfigs
+  #        cd ..
 
-      - run: make extract
+  #    - run: make extract
 
-      - run: make release -j9 LIBAVJS_VERSION=$LIBAVJS_VERSION LIBAVJS_VERSION_SUFFIX=$LIBAVJS_VERSION_SUFFIX
+  #    - run: make release -j9 LIBAVJS_VERSION=$LIBAVJS_VERSION LIBAVJS_VERSION_SUFFIX=$LIBAVJS_VERSION_SUFFIX
 
-      - uses: actions/upload-artifact@v3
-        with:
-          name: build
-          path: dist/release/libav.js-*.zip
+  #    - uses: actions/upload-artifact@v3
+  #      with:
+  #        name: build
+  #        path: dist/release/libav.js-*.zip
 
-      - run: |
-          cd dist/release && unzip libav.js-$LIBAVJS_VERSION.zip
-          cd libav.js-$LIBAVJS_VERSION
+  #    - run: |
+  #        cd dist/release && unzip libav.js-$LIBAVJS_VERSION.zip
+  #        cd libav.js-$LIBAVJS_VERSION
 
-          sed 's/@VER/$LIBAVJS_VERSION/g' ../../../package.json > package.json
-          rm -f dist/*.dbg.* dist/*.asm.mjs
-          npm publish --access=public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+  #        sed 's/@VER/$LIBAVJS_VERSION/g' ../../../package.json > package.json
+  #        rm -f dist/*.dbg.* dist/*.asm.mjs
+  #        npm publish --access=public
+  #      env:
+  #        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      #- run: make
-      #- run: make build-all
-      #- run: npm test
+  #    #- run: make
+  #    #- run: make build-all
+  #    #- run: npm test
 
   build-variant:
+    needs: [pre]
     strategy:
       fail-fast: false
       matrix:
@@ -150,7 +158,7 @@ jobs:
       LIBAVJS_VERSION_SUFFIX: ${{ needs.pre.outputs.LIBAVJS_VERSION_SUFFIX }}
       LIBAVJS_VERSION: ${{ needs.pre.outputs.LIBAVJS_VERSION }}
 
-    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    if: '!contains(github.event.head_commit.message, "skip ci")'
 
     runs-on: ubuntu-20.04
     steps:
@@ -205,7 +213,7 @@ jobs:
           cp -a README.md docs dist/release/libav.js-$LIBAVJS_VERSION-$VARIANT/
 
           # make the directory that the lib sources will be dumped into first
-          mkdir dist/release/libav.js-$LIBAVJS_VERSION/sources
+          mkdir -p dist/release/libav.js-$LIBAVJS_VERSION/sources
 
           # get sources for libs
           for t in ffmpeg lame libaom libogg libvorbis libvpx opus zlib;
@@ -231,14 +239,14 @@ jobs:
           name: libav.js ${{matrix.variant}} (zip)
           path: dist/release/libav.js-*.zip
 
-      - uses: actions/upload-artifact@v3
-        with:
-          name: dist_release
-          path: dist/release
-
       - run: |
           cd dist/release/libav.js-$LIBAVJS_VERSION-$VARIANT
           npm publish --access=public
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: dist_release (${{matrix.variant}})
+          path: dist/release
 
       #- run: |
       #    FFMPEG_VERSION_MAJOR="6"
