@@ -158,7 +158,8 @@ jobs:
       LIBAVJS_VERSION_SUFFIX: ${{ needs.pre.outputs.LIBAVJS_VERSION_SUFFIX }}
       LIBAVJS_VERSION: ${{ needs.pre.outputs.LIBAVJS_VERSION }}
 
-    if: '!contains(github.event.head_commit.message, "skip ci")'
+    if: |
+      !contains(github.event.head_commit.message, 'skip ci')
 
     runs-on: ubuntu-20.04
     steps:
