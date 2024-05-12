@@ -181,7 +181,7 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: 'dist/release'
+          name: dist_release
           path: dist/release
 
       #- run: |
