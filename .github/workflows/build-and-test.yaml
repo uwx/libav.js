@@ -64,12 +64,12 @@ jobs:
     runs-on: ubuntu-20.04
     needs: [pre]
     env:
-      FFMPEG_VERSION_MAJOR: ${{ needs.pre.ouputs.FFMPEG_VERSION_MAJOR }}
-      FFMPEG_VERSION_MINREV: ${{ needs.pre.ouputs.FFMPEG_VERSION_MINREV }}
-      FFMPEG_VERSION: ${{ needs.pre.ouputs.FFMPEG_VERSION }}
-      LIBAVJS_VERSION_BASE: ${{ needs.pre.ouputs.LIBAVJS_VERSION_BASE }}
-      LIBAVJS_VERSION_SUFFIX: ${{ needs.pre.ouputs.LIBAVJS_VERSION_SUFFIX }}
-      LIBAVJS_VERSION: ${{ needs.pre.ouputs.LIBAVJS_VERSION }}
+      FFMPEG_VERSION_MAJOR: ${{ needs.pre.outputs.FFMPEG_VERSION_MAJOR }}
+      FFMPEG_VERSION_MINREV: ${{ needs.pre.outputs.FFMPEG_VERSION_MINREV }}
+      FFMPEG_VERSION: ${{ needs.pre.outputs.FFMPEG_VERSION }}
+      LIBAVJS_VERSION_BASE: ${{ needs.pre.outputs.LIBAVJS_VERSION_BASE }}
+      LIBAVJS_VERSION_SUFFIX: ${{ needs.pre.outputs.LIBAVJS_VERSION_SUFFIX }}
+      LIBAVJS_VERSION: ${{ needs.pre.outputs.LIBAVJS_VERSION }}
 
     if: "!contains(github.event.head_commit.message, 'skip ci')"
 
@@ -143,12 +143,12 @@ jobs:
         ]
 
     env:
-      FFMPEG_VERSION_MAJOR: ${{ needs.pre.ouputs.FFMPEG_VERSION_MAJOR }}
-      FFMPEG_VERSION_MINREV: ${{ needs.pre.ouputs.FFMPEG_VERSION_MINREV }}
-      FFMPEG_VERSION: ${{ needs.pre.ouputs.FFMPEG_VERSION }}
-      LIBAVJS_VERSION_BASE: ${{ needs.pre.ouputs.LIBAVJS_VERSION_BASE }}
-      LIBAVJS_VERSION_SUFFIX: ${{ needs.pre.ouputs.LIBAVJS_VERSION_SUFFIX }}
-      LIBAVJS_VERSION: ${{ needs.pre.ouputs.LIBAVJS_VERSION }}
+      FFMPEG_VERSION_MAJOR: ${{ needs.pre.outputs.FFMPEG_VERSION_MAJOR }}
+      FFMPEG_VERSION_MINREV: ${{ needs.pre.outputs.FFMPEG_VERSION_MINREV }}
+      FFMPEG_VERSION: ${{ needs.pre.outputs.FFMPEG_VERSION }}
+      LIBAVJS_VERSION_BASE: ${{ needs.pre.outputs.LIBAVJS_VERSION_BASE }}
+      LIBAVJS_VERSION_SUFFIX: ${{ needs.pre.outputs.LIBAVJS_VERSION_SUFFIX }}
+      LIBAVJS_VERSION: ${{ needs.pre.outputs.LIBAVJS_VERSION }}
 
     if: "!contains(github.event.head_commit.message, 'skip ci')"
 
@@ -200,15 +200,17 @@ jobs:
       - run: |-
           VARIANT="${{matrix.variant}}"
 
-          make release-$VARIANT LIBAVJS_VERSION_SUFFIX=-${{ needs.pre.outputs.sha }}
+          make release-$VARIANT LIBAVJS_VERSION_SUFFIX=$LIBAVJS_VERSION_SUFFIX
 
           cp -a README.md docs dist/release/libav.js-$LIBAVJS_VERSION-$VARIANT/
-          mkdir dist/release/libav.js-$LIBAVJS_VERSION-$VARIANT/sources
+
+          # make the directory that the lib sources will be dumped into first
+          mkdir dist/release/libav.js-$LIBAVJS_VERSION/sources
 
           # get sources for libs
           for t in ffmpeg lame libaom libogg libvorbis libvpx opus zlib;
           do
-            make $t-release LIBAVJS_VERSION_SUFFIX=-${{ needs.pre.outputs.sha }}
+            make $t-release LIBAVJS_VERSION_SUFFIX=$LIBAVJS_VERSION_SUFFIX
           done
 
           # copy sources to variant dir
