@@ -3,7 +3,7 @@ run-name: Build and test ${{ github.sha }}
 on: [push, workflow_dispatch]
 
 env:
-  EM_VERSION: 3.1.55
+  EM_VERSION: latest
   EM_CACHE_FOLDER: 'cache-emsdk'
 
 jobs:
@@ -101,6 +101,17 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '20'
+
+      # workaround for broken clang on ubuntu runner until https://github.com/actions/runner-images/issues/8659 get fixed
+      - uses: mjp41/workaround8649@7929373c0fe5caf844d8115adccef39e3b5362e7
+        with:
+          os: ${{ matrix.os }}
+
+      - name: Install LLVM and Clang
+        run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 19 all
 
       - uses: actions/cache@v3
         name: Cache system libraries
