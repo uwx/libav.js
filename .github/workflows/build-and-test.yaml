@@ -8,7 +8,7 @@ env:
 
 jobs:
   build:
-    # This should be ubuntu-latest, but as of 2023-10-06ish, it has problems
+    # This should be ubuntu-24.04, but as of 2023-10-06ish, it has problems
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
@@ -94,7 +94,7 @@ jobs:
 
     if: "!contains(github.event.head_commit.message, 'skip ci')"
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v3
 
