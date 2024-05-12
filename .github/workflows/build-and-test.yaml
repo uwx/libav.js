@@ -168,6 +168,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
 
       ## workaround for broken clang on ubuntu runner until https://github.com/actions/runner-images/issues/8659 get fixed
       #- uses: mjp41/workaround8649@7929373c0fe5caf844d8115adccef39e3b5362e7
@@ -268,3 +269,34 @@ jobs:
       #      npm publish --access=public
       #  env:
       #    NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  build-combo:
+    needs: [pre, build-variant]
+
+    env:
+      FFMPEG_VERSION_MAJOR: ${{ needs.pre.outputs.FFMPEG_VERSION_MAJOR }}
+      FFMPEG_VERSION_MINREV: ${{ needs.pre.outputs.FFMPEG_VERSION_MINREV }}
+      FFMPEG_VERSION: ${{ needs.pre.outputs.FFMPEG_VERSION }}
+      LIBAVJS_VERSION_BASE: ${{ needs.pre.outputs.LIBAVJS_VERSION_BASE }}
+      LIBAVJS_VERSION_SUFFIX: ${{ needs.pre.outputs.LIBAVJS_VERSION_SUFFIX }}
+      LIBAVJS_VERSION: ${{ needs.pre.outputs.LIBAVJS_VERSION }}
+
+    if: |
+      !contains(github.event.head_commit.message, 'skip ci')
+
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - run: |
+          for t in default default-cli opus opus-af flac flac-af wav wav-af obsolete webm webm-cli webm-vp9 webm-vp9-cli vp8-opus vp8-opus-avf vp9-opus vp9-opus-avf av1-opus av1-opus-avf webcodecs webcodecs-avf all;
+          do
+            wget https://registry.npmjs.org/$t/-/$t-$LIBAVJS_VERSION.tgz
+            tar -xvf $t-$LIBAVJS_VERSION.tgz
+          done
