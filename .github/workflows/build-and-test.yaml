@@ -113,7 +113,7 @@ jobs:
 
       - run: make extract
 
-      - run: make release -j9 LIBAVJS_VERSION_SUFFIX=-${{ needs.pre.outputs.sha }}
+      - run: make release -j9 LIBAVJS_VERSION=$LIBAVJS_VERSION LIBAVJS_VERSION_SUFFIX=$LIBAVJS_VERSION_SUFFIX
 
       - uses: actions/upload-artifact@v3
         with:
@@ -122,10 +122,11 @@ jobs:
 
       - run: |
           cd dist/release && unzip libav.js-$LIBAVJS_VERSION.zip
-          cd libav.js-$LIBAVJS_VERSION && \
-            cp ../../../package.json . && \
-            rm -f dist/*.dbg.* dist/*.asm.mjs && \
-            npm publish --access=public
+          cd libav.js-$LIBAVJS_VERSION
+
+          sed 's/@VER/$LIBAVJS_VERSION/g' ../../../package.json > package.json
+          rm -f dist/*.dbg.* dist/*.asm.mjs
+          npm publish --access=public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
