@@ -129,7 +129,7 @@ jobs:
       - run: make extract
 
       - uses: bhowell2/github-substring-action@1.0.2
-        id: sha
+        id: sha1
         with:
           value: ${{ github.sha }}
           length_from_start: 7
@@ -143,7 +143,7 @@ jobs:
           LIBAVJS_VERSION_SUFFIX="-${{ steps.sha.outputs.substring }}"
           LIBAVJS_VERSION="$LIBAVJS_VERSION_BASE.$FFMPEG_VERSION$LIBAVJS_VERSION_SUFFIX"
 
-          LIBAVJS_OUT_DIR="dist/libav.js-$LIBAVJS_VERSION-${{matrix.variant}}""
+          LIBAVJS_OUT_DIR="dist/libav.js-$LIBAVJS_VERSION-${{matrix.variant}}"
 
           mkdir -p dist/release
           mkdir dist/release/libav.js-$LIBAVJS_VERSION
