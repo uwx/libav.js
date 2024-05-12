@@ -3,7 +3,7 @@ run-name: Build and test ${{ github.sha }}
 on: [push, workflow_dispatch]
 
 env:
-  EM_VERSION: 3.1.55
+  EM_VERSION: latest
   EM_CACHE_FOLDER: 'cache-emsdk'
 
 jobs:
