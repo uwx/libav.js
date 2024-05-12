@@ -42,7 +42,7 @@ jobs:
           BUILD_NUMBER="${{ steps.buildnumber.outputs.build_number }}"
 
           LIBAVJS_VERSION_BASE="6.0.0"
-          LIBAVJS_VERSION_SUFFIX="-nightly.$BUILD_NUMBER.$GITHUB_SHA_SHORT+ffmpeg-$FFMPEG_VERSION"
+          LIBAVJS_VERSION_SUFFIX="-nightly.$BUILD_NUMBER.$GITHUB_SHA_SHORT.ffmpeg.$FFMPEG_VERSION"
           LIBAVJS_VERSION="$LIBAVJS_VERSION_BASE$LIBAVJS_VERSION_SUFFIX"
 
           echo "FFMPEG_VERSION_MAJOR=$FFMPEG_VERSION_MAJOR" >> "$GITHUB_ENV"
@@ -242,7 +242,10 @@ jobs:
 
       - run: |
           cd dist/release/libav.js-$LIBAVJS_VERSION-${{matrix.variant}}
-          npm publish --access=public
+          npm publish --provenance --access=public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
 
       - uses: actions/upload-artifact@v3
         with:
