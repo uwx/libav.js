@@ -18,8 +18,8 @@ build/SVT-AV1-v$(SVT_AV1_VERSION)/build-$1/Makefile: build/SVT-AV1-v$(SVT_AV1_VE
 	cd build/SVT-AV1-v$(SVT_AV1_VERSION)/build-$1 && \
 		emcmake cmake ../../SVT-AV1-v$(SVT_AV1_VERSION) \
 		-DCMAKE_INSTALL_PREFIX="$(PWD)/build/inst/$1" \
-		-DCMAKE_C_FLAGS="-O3 -flto -msimd128 `cat $(PWD)/build/inst/$1/cflags.txt`" \
-		-DCMAKE_CXX_FLAGS="-O3 -flto -msimd128 `cat $(PWD)/build/inst/$1/cflags.txt`" \
+		-DCMAKE_C_FLAGS="-O3 -flto `cat $(PWD)/build/inst/$1/cflags.txt`" \
+		-DCMAKE_CXX_FLAGS="-O3 -flto `cat $(PWD)/build/inst/$1/cflags.txt`" \
 		-DCMAKE_BUILD_TYPE=Release \
                 $2
 	touch $(@)
