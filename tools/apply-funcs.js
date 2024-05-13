@@ -26,9 +26,9 @@ function accessors(f) {
     funcs.accessors.forEach((type) => {
         type[1].forEach((field) => {
             if (typeof field === "object")
-                f(type[0] + "_" + field.name + "_a", field);
+                f(type[0] + "_" + field.name + "_a", field, type[0]);
             else
-                f(type[0] + "_" + field, null);
+                f(type[0] + "_" + field, null, type[0]);
         });
     });
 }
@@ -63,7 +63,7 @@ function decls(f, meta) {
     var inp = fs.readFileSync("post.in.js", "utf8");
 
     var outp = "";
-    funcs.functions.forEach((decl) => {
+    function func(decl) {
         outp += `var ${decl[0]} = ` +
             `Module.${decl[0]} = ` +
             `CAccessors.${decl[0]} = ` +
@@ -99,9 +99,16 @@ function decls(f, meta) {
                 "}); " +
                 "return Module.serializationPromise; };\n";
         }
-    });
-    accessors((decl, field) => {
-        if (field && field.array) {
+    }
+    funcs.functions.forEach(func);
+    accessors((decl, field, type_name) => {
+        if (field && field.rational) {
+            func([`${type_name}_${field.name}_num`, "number", ["number"]]);
+            func([`${type_name}_${field.name}_den`, "number", ["number"]]);
+            func([`${type_name}_${field.name}_num_s`, null, ["number", "number"]]);
+            func([`${type_name}_${field.name}_den_s`, null, ["number", "number"]]);
+            func([`${type_name}_${field.name}_s`, null, ["number", "number", "number"]]);
+        } else if (field && field.array) {
             outp += `var ${decl} = ` +
                 `Module.${decl} = ` +
                 `CAccessors.${decl} = ` +
