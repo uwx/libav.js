@@ -239,7 +239,7 @@ function decls(f, meta) {
         signature(decl[0], args, ret(decl[1]), decl[3] && decl[3].async);
     }
     funcs.functions.forEach(func);
-    accessors((decl, field) => {
+    accessors((decl, field, type_name) => {
         if (field && field.rational) {
             func([`${type_name}_${field.name}_num`, "number", ["number"]]);
             func([`${type_name}_${field.name}_den`, "number", ["number"]]);
