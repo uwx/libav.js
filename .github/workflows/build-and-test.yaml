@@ -296,8 +296,21 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - run: |
+          mkdir temp
+          cd temp
+
           for t in default default-cli opus opus-af flac flac-af wav wav-af obsolete webm webm-cli webm-vp9 webm-vp9-cli vp8-opus vp8-opus-avf vp9-opus vp9-opus-avf av1-opus av1-opus-avf webcodecs webcodecs-avf all;
           do
-            wget https://registry.npmjs.org/$t/-/$t-$LIBAVJS_VERSION.tgz
-            tar -xvf $t-$LIBAVJS_VERSION.tgz
+            wget https://registry.npmjs.org/@uwx/libav.js-$t/-/libav.js-$t-$LIBAVJS_VERSION.tgz
+            tar -xvf libav.js-$t-$LIBAVJS_VERSION.tgz
           done
+
+          cd package
+          rm package.json
+          sed 's/@VER/$LIBAVJS_VERSION/g' ../package.json > package.json
+
+      - run: |
+          cd temp/package
+          npm publish --provenance --access=public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

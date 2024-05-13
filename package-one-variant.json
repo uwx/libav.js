@@ -12,6 +12,9 @@
   "directories": {
     "test": "tests"
   },
+  "scripts": {
+    "build": "make -j9 && make build-@VARIANT -j9"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/uwx/libav.js"
