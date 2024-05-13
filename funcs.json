@@ -201,7 +201,7 @@
             "ptshi",
             "sample_rate",
             "width",
-            {"name": "sample_aspect_ratio", "rational": true},
+            {"name": "sample_aspect_ratio", "rational": true}
         ]],
         ["AVPixFmtDescriptor", [
             "flags",
@@ -247,7 +247,7 @@
             "width",
             {"name": "framerate", "rational": true},
             {"name": "sample_aspect_ratio", "rational": true},
-            {"name": "time_base", "rational": true},
+            {"name": "time_base", "rational": true}
         ]],
         ["AVCodecDescriptor", [
             "id",
@@ -309,7 +309,7 @@
             "durationhi",
             {"name": "time_base", "rational": true},
             {"name": "avg_frame_rate", "rational": true},
-            {"name": "r_frame_rate", "rational": true},
+            {"name": "r_frame_rate", "rational": true}
         ]],
         ["AVFilterInOut", [
             "filter_ctx",
