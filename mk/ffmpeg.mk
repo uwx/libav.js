@@ -14,7 +14,7 @@ FFMPEG_CONFIG=--prefix=/opt/ffmpeg \
 	--disable-programs \
 	--disable-ffplay --disable-ffprobe --disable-network --disable-iconv --disable-xlib \
 	--disable-sdl2 --disable-zlib \
-	--disable-everything \
+	--disable-hwaccels \
 	--enable-lto --nm=emnm --cxx=em++ --dep-cc=emcc
 
 
