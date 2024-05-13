@@ -77,9 +77,6 @@ void ff_nothing() {}
 
 /* AVFrame */
 #define CurrentStruct AVFrame
-#define ExportField(type, field) ExportField(AVFrame, type, field)
-#define ExportLongField(type, field) ExportLongField(AVFrame, type, field)
-#define ExportArrayField(type, field) ExportArrayField(AVFrame, type, field)
 ExportField(size_t, crop_bottom)
 ExportField(size_t, crop_left)
 ExportField(size_t, crop_right)
@@ -95,15 +92,13 @@ ExportLongField(int64_t, pts)
 ExportField(int, sample_rate)
 ExportField(int, width)
 ExportField(enum AVPictureType, pict_type)
-#undef ExportField
-#undef ExportLongField
-#undef ExportArrayField
+#undef CurrentStruct
 
 /* Either way we expose the old channel layout API, but if the new channel
  * layout API is available, we use it */
 #if LIBAVUTIL_VERSION_INT > AV_VERSION_INT(57, 23, 100)
 /* New API */
-#define CHL() \
+#define ExportChannel() \
 void CurrentStruct ## _channel_layoutmask_s(CurrentStruct *a, uint32_t bl, uint32_t bh) { \
     uint64_t mask =  (((uint64_t) bl)) | (((uint64_t) bh) << 32); \
     av_channel_layout_uninit(&a->ch_layout); \
@@ -145,7 +140,7 @@ void CurrentStruct ##_channel_layouthi_s(CurrentStruct *a, uint32_t b) { \
 
 #else
 /* Old API */
-#define CHL() \
+#define ExportChannel() \
 void CurrentStruct ## _channel_layoutmask_s(CurrentStruct *a, uint32_t bl, uint32_t bh) { \
     a->channel_layout = ((uint16_t) bh << 32) | bl; \
 } \
@@ -183,17 +178,19 @@ void CurrentStruct ##_channel_layouthi_s(CurrentStruct *a, uint32_t b) { \
 
 #endif /* Channel layout API version */
 
-CHL(AVFrame)
+#define CurrentStruct AVFrame
+ExportChannel()
 
-ExportRational(AVFrame, sample_aspect_ratio)
+ExportRational(sample_aspect_ratio)
+#undef CurrentStruct
 
 /* AVPixFmtDescriptor */
-#define ExportField(type, field) ExportField(AVPixFmtDescriptor, type, field)
+#define CurrentStruct AVPixFmtDescriptor
 ExportField(uint64_t, flags)
 ExportField(uint8_t, nb_components)
 ExportField(uint8_t, log2_chroma_h)
 ExportField(uint8_t, log2_chroma_w)
-#undef ExportField
+#undef CurrentStruct
 
 int AVPixFmtDescriptor_comp_depth(AVPixFmtDescriptor *fmt, int comp)
 {
@@ -218,19 +215,16 @@ int av_opt_set_int_list_js(void *obj, const char *name, int width, void *val, in
  ***************************************************************/
 
 /* AVCodec */
-#define ExportField(type, field) ExportField(AVCodec, type, field)
-#define ExportArrayField(type, field) ExportArrayField(AVCodec, type, field)
+#define CurrentStruct AVCodec
 ExportField(enum AVSampleFormat *, sample_fmts)
 ExportArrayField(enum AVSampleFormat, sample_fmts)
 ExportField(int *, supported_samplerates)
 ExportArrayField(int, supported_samplerates)
 ExportField(enum AVMediaType, type)
-#undef ExportField
-#undef ExportArrayField
+#undef CurrentStruct
 
 /* AVCodecContext */
-#define ExportField(type, field) ExportField(AVCodecContext, type, field)
-#define ExportLongField(type, field) ExportLongField(AVCodecContext, type, field)
+#define CurrentStruct AVCodecContext
 ExportField(enum AVCodecID, codec_id)
 ExportField(enum AVMediaType, codec_type)
 ExportLongField(int64_t, bit_rate)
@@ -251,29 +245,29 @@ ExportField(int, sample_rate)
 ExportField(int, qmax)
 ExportField(int, qmin)
 ExportField(int, width)
-#undef ExportField
-#undef ExportLongField
 
-CHL(AVCodecContext)
+ExportChannel()
 
-ExportRational(AVCodecContext, framerate)
+ExportRational(framerate)
 
-ExportRational(AVCodecContext, sample_aspect_ratio)
+ExportRational(sample_aspect_ratio)
 
-ExportRational(AVCodecContext, time_base)
+ExportRational(time_base)
+
+#undef CurrentStruct
 
 /* AVCodecDescriptor */
-#define ExportField(type, field) ExportField(AVCodecDescriptor, type, field)
+#define CurrentStruct AVCodecDescriptor
 ExportField(enum AVCodecID, id)
 ExportField(char *, long_name)
 ExportArrayField(AVCodecDescriptor, char *, mime_types)
 ExportField(char *, name)
 ExportField(int, props)
 ExportField(enum AVMediaType, type)
-#undef ExportField
+#undef CurrentStruct
 
 /* AVCodecParameters */
-#define ExportField(type, field) ExportField(AVCodecParameters, type, field)
+#define CurrentStruct AVCodecParameters
 ExportField(enum AVCodecID, codec_id)
 ExportField(uint32_t, codec_tag)
 ExportField(enum AVMediaType, codec_type)
@@ -291,14 +285,12 @@ ExportField(enum AVColorTransferCharacteristic, color_trc)
 ExportField(enum AVColorSpace, color_space)
 ExportField(enum AVChromaLocation, chroma_location)
 ExportField(int, sample_rate)
-#undef ExportField
 
-CHL(AVCodecParameters)
-#undef CHL
+ExportChannel(AVCodecParameters)
+#undef CurrentStruct
 
 /* AVPacket */
-#define ExportField(type, field) ExportField(AVPacket, type, field)
-#define ExportLongField(type, field) ExportLongField(AVPacket, type, field)
+#define CurrentStruct AVCodecParameters
 ExportField(uint8_t *, data)
 ExportLongField(int64_t, dts)
 ExportLongField(int64_t, duration)
@@ -309,8 +301,7 @@ ExportField(AVPacketSideData *, side_data)
 ExportField(int, side_data_elems)
 ExportField(int, size)
 ExportField(int, stream_index)
-#undef ExportField
-#undef ExportLongField
+#undef CurrentStruct
 
 
 /* AVPacketSideData uses special accessors because it's usually an array */
@@ -349,30 +340,27 @@ void av_packet_rescale_ts_js(
  ***************************************************************/
 
 /* AVFormatContext */
-#define ExportField(type, field) ExportField(AVFormatContext, type, field)
-#define ExportArrayField(type, field) ExportArrayField(AVFormatContext, type, field)
+#define CurrentStruct AVFormatContext
 ExportField(int, flags)
 ExportField(unsigned int, nb_streams)
 ExportField(struct AVOutputFormat *, oformat)
 ExportField(AVIOContext *, pb)
 ExportArrayField(AVStream *, streams)
-#undef ExportField
-#undef ExportArrayField
+#undef CurrentStruct
 
 /* AVStream */
-#define ExportField(type, field) ExportField(AVStream, type, field)
-#define ExportLongField(type, field) ExportLongField(AVStream, type, field)
+#define CurrentStruct AVStream
 ExportField(AVCodecParameters *, codecpar)
 ExportField(enum AVDiscard, discard)
 ExportLongField(int64_t, duration)
-#undef ExportField
-#undef ExportLongField
 
-ExportRational(AVStream, time_base)
+ExportRational(time_base)
 
-ExportRational(AVStream, avg_frame_rate)
+ExportRational(avg_frame_rate)
 
-ExportRational(AVStream, r_frame_rate)
+ExportRational(r_frame_rate)
+
+#undef CurrentStruct
 
 int avformat_seek_file_min(
     AVFormatContext *s, int stream_index, int64_t ts, int flags
@@ -398,12 +386,12 @@ int avformat_seek_file_approx(
  ***************************************************************/
 
 /* AVFilterInOut */
-#define ExportField(type, field) ExportField(AVFilterInOut, type, field)
+#define CurrentStruct AVFilterInOut
 ExportField(AVFilterContext *, filter_ctx)
 ExportField(char *, name)
 ExportField(AVFilterInOut *, next)
 ExportField(int, pad_idx)
-#undef ExportField
+#undef CurrentStruct
 
 
 /****************************************************************

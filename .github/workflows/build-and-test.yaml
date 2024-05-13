@@ -306,7 +306,7 @@ jobs:
 
           cd package
           rm package.json
-          sed 's/@VER/$LIBAVJS_VERSION/g' ../../package.json > package.json
+          sed "s/@VER/$LIBAVJS_VERSION/g" ../../package.json > package.json
 
       - run: |
           cd temp/package
