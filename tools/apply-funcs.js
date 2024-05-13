@@ -37,9 +37,17 @@ function decls(f, meta) {
     funcs.functions.forEach((decl) => {
         f(decl[0], "func");
     });
-    accessors((decl) => {
-        f(decl, "getter");
-        f(decl+"_s", "setter");
+    accessors((decl, field, type_name) => {
+        if (field && field.rational) {
+            f(`${type_name}_${field.name}_num`, 'getter');
+            f(`${type_name}_${field.name}_den`, 'getter');
+            f(`${type_name}_${field.name}_num_s`, 'setter');
+            f(`${type_name}_${field.name}_den_s`, 'setter');
+            f(`${type_name}_${field.name}_s`, 'setter');
+        } else {
+            f(decl, "getter");
+            f(decl+"_s", "setter");
+        }
     });
     if (meta) {
         funcs.fs.forEach((decl) => {
@@ -184,7 +192,7 @@ function decls(f, meta) {
             syncp += `${name}_sync(${args}): ${ret};\n`;
     }
 
-    funcs.functions.forEach((decl) => {
+    function func(decl) {
         if (decl[3] && decl[3].notypes)
             return;
 
@@ -229,9 +237,16 @@ function decls(f, meta) {
         }
 
         signature(decl[0], args, ret(decl[1]), decl[3] && decl[3].async);
-    });
+    }
+    funcs.functions.forEach(func);
     accessors((decl, field) => {
-        if (field && field.array) {
+        if (field && field.rational) {
+            func([`${type_name}_${field.name}_num`, "number", ["number"]]);
+            func([`${type_name}_${field.name}_den`, "number", ["number"]]);
+            func([`${type_name}_${field.name}_num_s`, null, ["number", "number"]]);
+            func([`${type_name}_${field.name}_den_s`, null, ["number", "number"]]);
+            func([`${type_name}_${field.name}_s`, null, ["number", "number", "number"]]);
+        } else if (field && field.array) {
             signature(decl, "ptr: number, idx: number", "number");
             signature(`${decl}_s`, "ptr: number, idx: number, val: number",
                 "void");
