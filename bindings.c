@@ -47,24 +47,24 @@
 
 #define ExportRational(field) \
     int CurrentStruct##_##field##_num(CurrentStruct *a) { \
-        return a->##field##.num; \
+        return a->field.num; \
     } \
     \
     int CurrentStruct##_##field##_den(CurrentStruct *a) { \
-        return a->##field##.den; \
+        return a->field.den; \
     } \
     \
     void CurrentStruct##_##field##_num_s(CurrentStruct *a, int b) { \
-        a->##field##.num = b; \
+        a->field.num = b; \
     } \
     \
     void CurrentStruct##_##field##_den_s(CurrentStruct *a, int b) { \
-        a->##field##.den = b; \
+        a->field.den = b; \
     } \
     \
     void CurrentStruct##_##field##_s(CurrentStruct *a, int n, int d) { \
-        a->##field##.num = n; \
-        a->##field##.den = d; \
+        a->field.num = n; \
+        a->field.den = d; \
     }
 
 /* Not part of libav, just used to ensure a round trip to C for async purposes */
