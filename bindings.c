@@ -31,20 +31,41 @@
 #include "libavutil/pixdesc.h"
 #include "libavutil/version.h"
 
-#define A(struc, type, field) \
-    type struc ## _ ## field(struc *a) { return a->field; } \
-    void struc ## _ ## field ## _s(struc *a, type b) { a->field = b; }
+#define ExportField(type, field) \
+    type CurrentStruct ## _ ## field(CurrentStruct *a) { return a->field; } \
+    void CurrentStruct ## _ ## field ## _s(CurrentStruct *a, type b) { a->field = b; }
 
-#define AL(struc, type, field) \
-    uint32_t struc ## _ ## field(struc *a) { return (uint32_t) a->field; } \
-    uint32_t struc ## _ ## field ## hi(struc *a) { return (uint32_t) (a->field >> 32); } \
-    void struc ## _ ## field ## _s(struc *a, uint32_t b) { a->field = b; } \
-    void struc ## _ ## field ## hi_s(struc *a, uint32_t b) { a->field |= (((type) b) << 32); }
+#define ExportLongField(type, field) \
+    uint32_t CurrentStruct ## _ ## field(CurrentStruct *a) { return (uint32_t) a->field; } \
+    uint32_t CurrentStruct ## _ ## field ## hi(CurrentStruct *a) { return (uint32_t) (a->field >> 32); } \
+    void CurrentStruct ## _ ## field ## _s(CurrentStruct *a, uint32_t b) { a->field = b; } \
+    void CurrentStruct ## _ ## field ## hi_s(CurrentStruct *a, uint32_t b) { a->field |= (((type) b) << 32); }
 
-#define AA(struc, type, field) \
-    type struc ## _ ## field ## _a(struc *a, size_t c) { return a->field[c]; } \
-    void struc ## _ ## field ## _a_s(struc *a, size_t c, type b) { ((type *) a->field)[c] = b; }
+#define ExportArrayField(type, field) \
+    type CurrentStruct ## _ ## field ## _a(CurrentStruct *a, size_t c) { return a->field[c]; } \
+    void CurrentStruct ## _ ## field ## _a_s(CurrentStruct *a, size_t c, type b) { ((type *) a->field)[c] = b; }
 
+#define ExportRational(field) \
+    int CurrentStruct##_##field##_num(CurrentStruct *a) { \
+        return a->##field##.num; \
+    } \
+    \
+    int CurrentStruct##_##field##_den(CurrentStruct *a) { \
+        return a->##field##.den; \
+    } \
+    \
+    void CurrentStruct##_##field##_num_s(CurrentStruct *a, int b) { \
+        a->##field##.num = b; \
+    } \
+    \
+    void CurrentStruct##_##field##_den_s(CurrentStruct *a, int b) { \
+        a->##field##.den = b; \
+    } \
+    \
+    void CurrentStruct##_##field##_s(CurrentStruct *a, int n, int d) { \
+        a->##field##.num = n; \
+        a->##field##.den = d; \
+    }
 
 /* Not part of libav, just used to ensure a round trip to C for async purposes */
 void ff_nothing() {}
@@ -55,65 +76,67 @@ void ff_nothing() {}
  ***************************************************************/
 
 /* AVFrame */
-#define B(type, field) A(AVFrame, type, field)
-#define BL(type, field) AL(AVFrame, type, field)
-#define BA(type, field) AA(AVFrame, type, field)
-B(size_t, crop_bottom)
-B(size_t, crop_left)
-B(size_t, crop_right)
-B(size_t, crop_top)
-BA(uint8_t *, data)
-B(int, format)
-B(int, height)
-B(int, key_frame)
-BA(int, linesize)
-B(int, nb_samples)
-B(int, pict_type)
-BL(int64_t, pts)
-B(int, sample_rate)
-B(int, width)
-#undef B
-#undef BL
-#undef BA
+#define CurrentStruct AVFrame
+#define ExportField(type, field) ExportField(AVFrame, type, field)
+#define ExportLongField(type, field) ExportLongField(AVFrame, type, field)
+#define ExportArrayField(type, field) ExportArrayField(AVFrame, type, field)
+ExportField(size_t, crop_bottom)
+ExportField(size_t, crop_left)
+ExportField(size_t, crop_right)
+ExportField(size_t, crop_top)
+ExportArrayField(uint8_t *, data)
+ExportField(int, format)
+ExportField(int, height)
+ExportField(int, key_frame)
+ExportArrayField(int, linesize)
+ExportField(int, nb_samples)
+ExportField(int, pict_type)
+ExportLongField(int64_t, pts)
+ExportField(int, sample_rate)
+ExportField(int, width)
+ExportField(enum AVPictureType, pict_type)
+#undef ExportField
+#undef ExportLongField
+#undef ExportArrayField
 
 /* Either way we expose the old channel layout API, but if the new channel
  * layout API is available, we use it */
 #if LIBAVUTIL_VERSION_INT > AV_VERSION_INT(57, 23, 100)
 /* New API */
-#define CHL(struc) \
-void struc ## _channel_layoutmask_s(struc *a, uint32_t bl, uint32_t bh) { \
+#define CHL() \
+void CurrentStruct ## _channel_layoutmask_s(CurrentStruct *a, uint32_t bl, uint32_t bh) { \
     uint64_t mask =  (((uint64_t) bl)) | (((uint64_t) bh) << 32); \
     av_channel_layout_uninit(&a->ch_layout); \
     av_channel_layout_from_mask(&a->ch_layout, mask);\
 } \
-uint64_t struc ## _channel_layoutmask(struc *a) { \
+uint64_t CurrentStruct ## _channel_layoutmask(CurrentStruct *a) { \
     return a->ch_layout.u.mask; \
 }\
-int struc ## _channels(struc *a) { \
+int CurrentStruct ## _channels(CurrentStruct *a) { \
     return a->ch_layout.nb_channels; \
 } \
-void struc ## _channels_s(struc *a, int b) { \
+void CurrentStruct ## _channels_s(CurrentStruct *a, int b) { \
     a->ch_layout.nb_channels = b; \
 }\
-int struc ## _ch_layout_nb_channels(struc *a) { \
+int CurrentStruct ## _ch_layout_nb_channels(CurrentStruct *a) { \
     return a->ch_layout.nb_channels; \
 }\
-void struc ## _ch_layout_nb_channels_s(struc *a, int b) { \
+void CurrentStruct ## _ch_layout_nb_channels_s(CurrentStruct *a, int b) { \
     a->ch_layout.nb_channels = b; \
 }\
-uint32_t struc ## _channel_layout(struc *a) { \
+uint32_t CurrentStruct ## _channel_layout(CurrentStruct *a) { \
     return (uint32_t) a->ch_layout.u.mask; \
 }\
-uint32_t struc ##_channel_layouthi(struc *a) { \
+uint32_t CurrentStruct ##_channel_layouthi(CurrentStruct *a) { \
     return (uint32_t) (a->ch_layout.u.mask >> 32);\
 }\
-void struc ##_channel_layout_s(struc *a, uint32_t b) { \
+void CurrentStruct ##_channel_layout_s(CurrentStruct *a, uint32_t b) { \
     a->ch_layout.u.mask = (a->ch_layout.u.mask & (0xFFFFFFFFull << 32)) | (((uint64_t) b));\
     uint64_t mask = a->ch_layout.u.mask;\
     av_channel_layout_uninit(&a->ch_layout);\
     av_channel_layout_from_mask(&a->ch_layout, mask);\
 }\
-void struc ##_channel_layouthi_s(struc *a, uint32_t b) { \
+void CurrentStruct ##_channel_layouthi_s(CurrentStruct *a, uint32_t b) { \
     a->ch_layout.u.mask = (a->ch_layout.u.mask & 0xFFFFFFFFull) | (((uint64_t) b) << 32);\
     uint64_t mask = a->ch_layout.u.mask;\
     av_channel_layout_uninit(&a->ch_layout);\
@@ -122,37 +145,37 @@ void struc ##_channel_layouthi_s(struc *a, uint32_t b) { \
 
 #else
 /* Old API */
-#define CHL(struc) \
-void struc ## _channel_layoutmask_s(struc *a, uint32_t bl, uint32_t bh) { \
+#define CHL() \
+void CurrentStruct ## _channel_layoutmask_s(CurrentStruct *a, uint32_t bl, uint32_t bh) { \
     a->channel_layout = ((uint16_t) bh << 32) | bl; \
 } \
-uint64_t struc ## _channel_layoutmask(struc *a) { \
+uint64_t CurrentStruct ## _channel_layoutmask(CurrentStruct *a) { \
     return a->channel_layout; \
 }\
-int struc ## _channels(struc *a) { \
+int CurrentStruct ## _channels(CurrentStruct *a) { \
     return a->channels; \
 } \
-void struc ## _channels_s(struc *a, int b) { \
+void CurrentStruct ## _channels_s(CurrentStruct *a, int b) { \
     a->channels = b; \
 }\
-int struc ## _ch_layout_nb_channels(struc *a) { \
+int CurrentStruct ## _ch_layout_nb_channels(CurrentStruct *a) { \
     return a->channels; \
 }\
-void struc ## _ch_layout_nb_channels_s(struc *a, int b) { \
+void CurrentStruct ## _ch_layout_nb_channels_s(CurrentStruct *a, int b) { \
     a->channels = b; \
 }\
-uint32_t struc ## _channel_layout(struc *a) { \
+uint32_t CurrentStruct ## _channel_layout(CurrentStruct *a) { \
     return a->channel_layout; \
 }\
-uint32_t struc ##_channel_layouthi(struc *a) { \
+uint32_t CurrentStruct ##_channel_layouthi(CurrentStruct *a) { \
     return a->channel_layout >> 32; \
 }\
-void struc ##_channel_layout_s(struc *a, uint32_t b) { \
+void CurrentStruct ##_channel_layout_s(CurrentStruct *a, uint32_t b) { \
     a->channel_layout = \
         (a->channel_layout & (0xFFFFFFFFull << 32)) | \
         ((uint64_t) b); \
 }\
-void struc ##_channel_layouthi_s(struc *a, uint32_t b) { \
+void CurrentStruct ##_channel_layouthi_s(CurrentStruct *a, uint32_t b) { \
     a->channel_layout = \
         (((uint64_t) b) << 32) | \
         (a->channel_layout & 0xFFFFFFFFull); \
@@ -162,26 +185,15 @@ void struc ##_channel_layouthi_s(struc *a, uint32_t b) { \
 
 CHL(AVFrame)
 
-int AVFrame_sample_aspect_ratio_num(AVFrame *a) {
-    return a->sample_aspect_ratio.num;
-}
-
-int AVFrame_sample_aspect_ratio_den(AVFrame *a) {
-    return a->sample_aspect_ratio.den;
-}
-
-void AVFrame_sample_aspect_ratio_s(AVFrame *a, int n, int d) {
-    a->sample_aspect_ratio.num = n;
-    a->sample_aspect_ratio.den = d;
-}
+ExportRational(AVFrame, sample_aspect_ratio)
 
 /* AVPixFmtDescriptor */
-#define B(type, field) A(AVPixFmtDescriptor, type, field)
-B(uint64_t, flags)
-B(uint8_t, nb_components)
-B(uint8_t, log2_chroma_h)
-B(uint8_t, log2_chroma_w)
-#undef B
+#define ExportField(type, field) ExportField(AVPixFmtDescriptor, type, field)
+ExportField(uint64_t, flags)
+ExportField(uint8_t, nb_components)
+ExportField(uint8_t, log2_chroma_h)
+ExportField(uint8_t, log2_chroma_w)
+#undef ExportField
 
 int AVPixFmtDescriptor_comp_depth(AVPixFmtDescriptor *fmt, int comp)
 {
@@ -206,140 +218,99 @@ int av_opt_set_int_list_js(void *obj, const char *name, int width, void *val, in
  ***************************************************************/
 
 /* AVCodec */
-#define B(type, field) A(AVCodec, type, field)
-#define BA(type, field) AA(AVCodec, type, field)
-B(enum AVSampleFormat *, sample_fmts)
-BA(enum AVSampleFormat, sample_fmts)
-B(int *, supported_samplerates)
-BA(int, supported_samplerates)
-B(enum AVMediaType, type)
-#undef B
-#undef BA
+#define ExportField(type, field) ExportField(AVCodec, type, field)
+#define ExportArrayField(type, field) ExportArrayField(AVCodec, type, field)
+ExportField(enum AVSampleFormat *, sample_fmts)
+ExportArrayField(enum AVSampleFormat, sample_fmts)
+ExportField(int *, supported_samplerates)
+ExportArrayField(int, supported_samplerates)
+ExportField(enum AVMediaType, type)
+#undef ExportField
+#undef ExportArrayField
 
 /* AVCodecContext */
-#define B(type, field) A(AVCodecContext, type, field)
-#define BL(type, field) AL(AVCodecContext, type, field)
-B(enum AVCodecID, codec_id)
-B(enum AVMediaType, codec_type)
-BL(int64_t, bit_rate)
-B(uint8_t *, extradata)
-B(int, extradata_size)
-B(int, frame_size)
-B(int, gop_size)
-B(int, height)
-B(int, keyint_min)
-B(int, level)
-B(int, max_b_frames)
-B(int, pix_fmt)
-B(int, profile)
-BL(int64_t, rc_max_rate)
-BL(int64_t, rc_min_rate)
-B(int, sample_fmt)
-B(int, sample_rate)
-B(int, qmax)
-B(int, qmin)
-B(int, width)
-#undef B
-#undef BL
+#define ExportField(type, field) ExportField(AVCodecContext, type, field)
+#define ExportLongField(type, field) ExportLongField(AVCodecContext, type, field)
+ExportField(enum AVCodecID, codec_id)
+ExportField(enum AVMediaType, codec_type)
+ExportLongField(int64_t, bit_rate)
+ExportField(uint8_t *, extradata)
+ExportField(int, extradata_size)
+ExportField(int, frame_size)
+ExportField(int, gop_size)
+ExportField(int, height)
+ExportField(int, keyint_min)
+ExportField(int, level)
+ExportField(int, max_b_frames)
+ExportField(int, pix_fmt)
+ExportField(int, profile)
+ExportLongField(int64_t, rc_max_rate)
+ExportLongField(int64_t, rc_min_rate)
+ExportField(int, sample_fmt)
+ExportField(int, sample_rate)
+ExportField(int, qmax)
+ExportField(int, qmin)
+ExportField(int, width)
+#undef ExportField
+#undef ExportLongField
 
 CHL(AVCodecContext)
 
-int AVCodecContext_framerate_num(AVCodecContext *a) {
-    return a->framerate.num;
-}
+ExportRational(AVCodecContext, framerate)
 
-int AVCodecContext_framerate_den(AVCodecContext *a) {
-    return a->framerate.den;
-}
+ExportRational(AVCodecContext, sample_aspect_ratio)
 
-void AVCodecContext_framerate_num_s(AVCodecContext *a, int b) {
-    a->framerate.num = b;
-}
-
-void AVCodecContext_framerate_den_s(AVCodecContext *a, int b) {
-    a->framerate.den = b;
-}
-
-void AVCodecContext_framerate_s(AVCodecContext *a, int n, int d) {
-    a->framerate.num = n;
-    a->framerate.den = d;
-}
-
-int AVCodecContext_sample_aspect_ratio_num(AVCodecContext *a) {
-    return a->sample_aspect_ratio.num;
-}
-
-int AVCodecContext_sample_aspect_ratio_den(AVCodecContext *a) {
-    return a->sample_aspect_ratio.den;
-}
-
-void AVCodecContext_sample_aspect_ratio_num_s(AVCodecContext *a, int b) {
-    a->sample_aspect_ratio.num = b;
-}
-
-void AVCodecContext_sample_aspect_ratio_den_s(AVCodecContext *a, int b) {
-    a->sample_aspect_ratio.den = b;
-}
-
-void AVCodecContext_sample_aspect_ratio_s(AVCodecContext *a, int n, int d) {
-    a->sample_aspect_ratio.num = n;
-    a->sample_aspect_ratio.den = d;
-}
-
-void AVCodecContext_time_base_s(AVCodecContext *a, int n, int d) {
-    a->time_base.num = n;
-    a->time_base.den = d;
-}
+ExportRational(AVCodecContext, time_base)
 
 /* AVCodecDescriptor */
-#define B(type, field) A(AVCodecDescriptor, type, field)
-B(enum AVCodecID, id)
-B(char *, long_name)
-AA(AVCodecDescriptor, char *, mime_types)
-B(char *, name)
-B(int, props)
-B(enum AVMediaType, type)
-#undef B
+#define ExportField(type, field) ExportField(AVCodecDescriptor, type, field)
+ExportField(enum AVCodecID, id)
+ExportField(char *, long_name)
+ExportArrayField(AVCodecDescriptor, char *, mime_types)
+ExportField(char *, name)
+ExportField(int, props)
+ExportField(enum AVMediaType, type)
+#undef ExportField
 
 /* AVCodecParameters */
-#define B(type, field) A(AVCodecParameters, type, field)
-B(enum AVCodecID, codec_id)
-B(uint32_t, codec_tag)
-B(enum AVMediaType, codec_type)
-B(uint8_t *, extradata)
-B(int, extradata_size)
-B(int, format)
-B(int64_t, bit_rate)
-B(int, profile)
-B(int, level)
-B(int, width)
-B(int, height)
-B(enum AVColorRange, color_range)
-B(enum AVColorPrimaries, color_primaries)
-B(enum AVColorTransferCharacteristic, color_trc)
-B(enum AVColorSpace, color_space)
-B(enum AVChromaLocation, chroma_location)
-B(int, sample_rate)
-#undef B
+#define ExportField(type, field) ExportField(AVCodecParameters, type, field)
+ExportField(enum AVCodecID, codec_id)
+ExportField(uint32_t, codec_tag)
+ExportField(enum AVMediaType, codec_type)
+ExportField(uint8_t *, extradata)
+ExportField(int, extradata_size)
+ExportField(int, format)
+ExportField(int64_t, bit_rate)
+ExportField(int, profile)
+ExportField(int, level)
+ExportField(int, width)
+ExportField(int, height)
+ExportField(enum AVColorRange, color_range)
+ExportField(enum AVColorPrimaries, color_primaries)
+ExportField(enum AVColorTransferCharacteristic, color_trc)
+ExportField(enum AVColorSpace, color_space)
+ExportField(enum AVChromaLocation, chroma_location)
+ExportField(int, sample_rate)
+#undef ExportField
 
 CHL(AVCodecParameters)
 #undef CHL
 
 /* AVPacket */
-#define B(type, field) A(AVPacket, type, field)
-#define BL(type, field) AL(AVPacket, type, field)
-B(uint8_t *, data)
-BL(int64_t, dts)
-BL(int64_t, duration)
-B(int, flags)
-BL(int64_t, pos)
-BL(int64_t, pts)
-B(AVPacketSideData *, side_data)
-B(int, side_data_elems)
-B(int, size)
-B(int, stream_index)
-#undef B
-#undef BL
+#define ExportField(type, field) ExportField(AVPacket, type, field)
+#define ExportLongField(type, field) ExportLongField(AVPacket, type, field)
+ExportField(uint8_t *, data)
+ExportLongField(int64_t, dts)
+ExportLongField(int64_t, duration)
+ExportField(int, flags)
+ExportLongField(int64_t, pos)
+ExportLongField(int64_t, pts)
+ExportField(AVPacketSideData *, side_data)
+ExportField(int, side_data_elems)
+ExportField(int, size)
+ExportField(int, stream_index)
+#undef ExportField
+#undef ExportLongField
 
 
 /* AVPacketSideData uses special accessors because it's usually an array */
@@ -378,63 +349,30 @@ void av_packet_rescale_ts_js(
  ***************************************************************/
 
 /* AVFormatContext */
-#define B(type, field) A(AVFormatContext, type, field)
-#define BA(type, field) AA(AVFormatContext, type, field)
-B(int, flags)
-B(unsigned int, nb_streams)
-B(struct AVOutputFormat *, oformat)
-B(AVIOContext *, pb)
-BA(AVStream *, streams)
-#undef B
-#undef BA
+#define ExportField(type, field) ExportField(AVFormatContext, type, field)
+#define ExportArrayField(type, field) ExportArrayField(AVFormatContext, type, field)
+ExportField(int, flags)
+ExportField(unsigned int, nb_streams)
+ExportField(struct AVOutputFormat *, oformat)
+ExportField(AVIOContext *, pb)
+ExportArrayField(AVStream *, streams)
+#undef ExportField
+#undef ExportArrayField
 
 /* AVStream */
-#define B(type, field) A(AVStream, type, field)
-#define BL(type, field) AL(AVStream, type, field)
-B(AVCodecParameters *, codecpar)
-B(enum AVDiscard, discard)
-BL(int64_t, duration)
-#undef B
-#undef BL
+#define ExportField(type, field) ExportField(AVStream, type, field)
+#define ExportLongField(type, field) ExportLongField(AVStream, type, field)
+ExportField(AVCodecParameters *, codecpar)
+ExportField(enum AVDiscard, discard)
+ExportLongField(int64_t, duration)
+#undef ExportField
+#undef ExportLongField
 
-int AVStream_time_base_num(AVStream *a) {
-    return a->time_base.num;
-}
+ExportRational(AVStream, time_base)
 
-int AVStream_time_base_den(AVStream *a) {
-    return a->time_base.den;
-}
+ExportRational(AVStream, avg_frame_rate)
 
-void AVStream_time_base_s(AVStream *a, int n, int d) {
-    a->time_base.num = n;
-    a->time_base.den = d;
-}
-
-int AVStream_avg_frame_rate_num(AVStream *a) {
-    return a->avg_frame_rate.num;
-}
-
-int AVStream_avg_frame_rate_den(AVStream *a) {
-    return a->avg_frame_rate.den;
-}
-
-void AVStream_avg_frame_rate_s(AVStream *a, int n, int d) {
-    a->avg_frame_rate.num = n;
-    a->avg_frame_rate.den = d;
-}
-
-int AVStream_r_frame_rate_num(AVStream *a) {
-    return a->r_frame_rate.num;
-}
-
-int AVStream_r_frame_rate_den(AVStream *a) {
-    return a->r_frame_rate.den;
-}
-
-void AVStream_r_frame_rate_s(AVStream *a, int n, int d) {
-    a->r_frame_rate.num = n;
-    a->r_frame_rate.den = d;
-}
+ExportRational(AVStream, r_frame_rate)
 
 int avformat_seek_file_min(
     AVFormatContext *s, int stream_index, int64_t ts, int flags
@@ -460,12 +398,12 @@ int avformat_seek_file_approx(
  ***************************************************************/
 
 /* AVFilterInOut */
-#define B(type, field) A(AVFilterInOut, type, field)
-B(AVFilterContext *, filter_ctx)
-B(char *, name)
-B(AVFilterInOut *, next)
-B(int, pad_idx)
-#undef B
+#define ExportField(type, field) ExportField(AVFilterInOut, type, field)
+ExportField(AVFilterContext *, filter_ctx)
+ExportField(char *, name)
+ExportField(AVFilterInOut *, next)
+ExportField(int, pad_idx)
+#undef ExportField
 
 
 /****************************************************************
