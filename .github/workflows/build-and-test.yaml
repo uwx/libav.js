@@ -248,11 +248,10 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: dist_release (${{matrix.variant}})
-          path: dist/release
+      #- uses: actions/upload-artifact@v3
+      #  with:
+      #    name: dist_release (${{matrix.variant}})
+      #    path: dist/release
 
       #- run: |
       #    FFMPEG_VERSION_MAJOR="6"
