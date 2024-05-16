@@ -41,7 +41,7 @@
     },
     "./backend/@VARIANT.thr.wasm": {
       "//": "This is the libav.js backend for threaded WASM.",
-      "default": "./dist/libav-@VER-@VARIANT.thr.wasm.wasm",
+      "default": "./dist/libav-@VER-@VARIANT.thr.wasm",
       "types": "./dist/libav.types.d.ts"
     }
   },
