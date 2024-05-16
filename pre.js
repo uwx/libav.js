@@ -36,13 +36,19 @@ if (typeof _scriptDir === "undefined") {
 
 Module.locateFile = function(path, prefix) {
     // if it's the wasm file
-    if (path.lastIndexOf(".wasm") === path.length - 5 &&
-        path.indexOf("libav-") !== -1) {
+    if (path.endsWith(".wasm") && path.indexOf("libav-") !== -1) {
         // Look for overrides
         if (Module.wasmurl)
             return Module.wasmurl;
         if (Module.variant)
             return prefix + "libav-@VER-" + Module.variant + ".@DBG@TARGET.wasm";
+    }
+
+    // If it's the worker file
+    if ((path.endsWith('.worker.mjs') || path.endsWith('.worker.js')) && path.indexOf("libav-") !== -1) {
+        // Look for overrides
+        if (Module.threadworkerurl)
+            return Module.threadworkerurl;
     }
 
     // Otherwise, use the default
