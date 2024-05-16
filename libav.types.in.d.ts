@@ -606,6 +606,11 @@ export interface LibAVOpts {
      * The full URL from which to load the .wasm file.
      */
     wasmurl?: string;
+
+    /**
+     * The full URL from which to load the .worker.js or .worker.mjs file, when using threads.
+     */
+    threadworkerurl?: string;
 }
 
 /**
