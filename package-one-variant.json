@@ -10,36 +10,36 @@
       "default": "./dist/libav-@VARIANT.js",
       "types": "./dist/libav.types.d.ts"
     },
-    "./libav-@VARIANT": {
+    "./@VARIANT": {
       "//": "This is the libav.js frontend.",
       "import": "./dist/libav-@VARIANT.mjs",
       "default": "./dist/libav-@VARIANT.js",
       "types": "./dist/libav.types.d.ts"
     },
-    "./factory/libav-@VARIANT.asm": {
+    "./factory/@VARIANT.asm": {
       "//": "This is the libav.js factory for asm.js.",
       "import": "./dist/libav-@VER-@VARIANT.asm.js",
       "require": "./dist/libav-@VER-@VARIANT.asm.mjs",
       "types": "./dist/libav.types.d.ts"
     },
-    "./factory/libav-@VARIANT.wasm": {
+    "./factory/@VARIANT.wasm": {
       "//": "This is the libav.js factory for non-threaded WASM.",
       "import": "./dist/libav-@VER-@VARIANT.wasm.js",
       "require": "./dist/libav-@VER-@VARIANT.wasm.mjs",
       "types": "./dist/libav.types.d.ts"
     },
-    "./factory/libav-@VARIANT.thr": {
+    "./factory/@VARIANT.thr": {
       "//": "This is the libav.js factory for threaded WASM.",
       "import": "./dist/libav-@VER-@VARIANT.thr.js",
       "require": "./dist/libav-@VER-@VARIANT.thr.mjs",
       "types": "./dist/libav.types.d.ts"
     },
-    "./backend/libav-@VARIANT.wasm": {
+    "./backend/@VARIANT.wasm": {
       "//": "This is the libav.js backend for non-threaded WASM.",
       "default": "./dist/libav-@VER-@VARIANT.wasm.wasm",
       "types": "./dist/libav.types.d.ts"
     },
-    "./backend/libav-@VARIANT.thr.wasm": {
+    "./backend/@VARIANT.thr.wasm": {
       "//": "This is the libav.js backend for threaded WASM.",
       "default": "./dist/libav-@VER-@VARIANT.thr.wasm.wasm",
       "types": "./dist/libav.types.d.ts"
