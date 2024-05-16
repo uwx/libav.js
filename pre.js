@@ -15,10 +15,23 @@
 
 // Import LibAV.base if applicable
 if (typeof _scriptDir === "undefined") {
-    if (typeof LibAV === "object" && LibAV && LibAV.base)
-        _scriptDir = LibAV.base + "/libav-@VER-@VARIANT.@DBG@TARGET.@JS";
-    else if (typeof self && self && self.location)
-        _scriptDir = self.location.href;
+    let attempt = 0;
+    do {
+        try {
+            if (typeof LibAV === "object" && LibAV && LibAV.base)
+                _scriptDir = LibAV.base + "/libav-@VER-@VARIANT.@DBG@TARGET.@JS";
+            else if (typeof self && self && self.location)
+                _scriptDir = self.location.href;
+        } catch (err) {
+            // Handle bad assignment "ReferenceError: _scriptDir is not defined" in strict scope
+            // If it fails more than once, it's a different error.
+            if (!(err instanceof ReferenceError) || attempt++ > 0) throw err;
+            global._scriptDir = undefined;
+            continue;
+        }
+
+        break;
+    } while (true);
 }
 
 Module.locateFile = function(path, prefix) {
