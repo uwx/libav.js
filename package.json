@@ -6,33 +6,781 @@
   "main": "dist/libav-default.js",
   "exports": {
     ".": {
+      "//": "This is the libav.js frontend.",
       "import": "./dist/libav-default.mjs",
       "default": "./dist/libav-default.js",
       "types": "./dist/libav.types.d.ts"
     },
-    "./all": { "import": "./dist/libav-all.mjs", "default": "./dist/libav-all.js", "types": "./dist/libav.types.d.ts" },
-    "./av1-opus": { "import": "./dist/libav-av1-opus.mjs", "default": "./dist/libav-av1-opus.js", "types": "./dist/libav.types.d.ts" },
-    "./vp9-opus": { "import": "./dist/libav-vp9-opus.mjs", "default": "./dist/libav-vp9-opus.js", "types": "./dist/libav.types.d.ts" },
-    "./webm-vp9": { "import": "./dist/libav-webm-vp9.mjs", "default": "./dist/libav-webm-vp9.js", "types": "./dist/libav.types.d.ts" },
-    "./webm-vp9-cli": { "import": "./dist/libav-webm-vp9-cli.mjs", "default": "./dist/libav-webm-vp9-cli.js", "types": "./dist/libav.types.d.ts" },
-    "./av1-opus-avf": { "import": "./dist/libav-av1-opus-avf.mjs", "default": "./dist/libav-av1-opus-avf.js", "types": "./dist/libav.types.d.ts" },
-    "./vp9-opus-avf": { "import": "./dist/libav-vp9-opus-avf.mjs", "default": "./dist/libav-vp9-opus-avf.js", "types": "./dist/libav.types.d.ts" },
 
-    "./default": { "import": "./dist/libav-default.mjs", "default": "./dist/libav-default.js", "types": "./dist/libav.types.d.ts" },
-    "./default-cli": { "import": "./dist/libav-default-cli.mjs", "default": "./dist/libav-default-cli.js", "types": "./dist/libav.types.d.ts" },
-    "./opus": { "import": "./dist/libav-opus.mjs", "default": "./dist/libav-opus.js", "types": "./dist/libav.types.d.ts" },
-    "./opus-af": { "import": "./dist/libav-opus-af.mjs", "default": "./dist/libav-opus-af.js", "types": "./dist/libav.types.d.ts" },
-    "./flac": { "import": "./dist/libav-flac.mjs", "default": "./dist/libav-flac.js", "types": "./dist/libav.types.d.ts" },
-    "./flac-af": { "import": "./dist/libav-flac-af.mjs", "default": "./dist/libav-flac-af.js", "types": "./dist/libav.types.d.ts" },
-    "./wav": { "import": "./dist/libav-wav.mjs", "default": "./dist/libav-wav.js", "types": "./dist/libav.types.d.ts" },
-    "./wav-af": { "import": "./dist/libav-wav-af.mjs", "default": "./dist/libav-wav-af.js", "types": "./dist/libav.types.d.ts" },
-    "./obsolete": { "import": "./dist/libav-obsolete.mjs", "default": "./dist/libav-obsolete.js", "types": "./dist/libav.types.d.ts" },
-    "./webm": { "import": "./dist/libav-webm.mjs", "default": "./dist/libav-webm.js", "types": "./dist/libav.types.d.ts" },
-    "./webm-cli": { "import": "./dist/libav-webm-cli.mjs", "default": "./dist/libav-webm-cli.js", "types": "./dist/libav.types.d.ts" },
-    "./vp8-opus": { "import": "./dist/libav-vp8-opus.mjs", "default": "./dist/libav-vp8-opus.js", "types": "./dist/libav.types.d.ts" },
-    "./vp8-opus-avf": { "import": "./dist/libav-vp8-opus-avf.mjs", "default": "./dist/libav-vp8-opus-avf.js", "types": "./dist/libav.types.d.ts" },
-    "./webcodecs": { "import": "./dist/libav-webcodecs.mjs", "default": "./dist/libav-webcodecs.js", "types": "./dist/libav.types.d.ts" },
-    "./webcodecs-avf": { "import": "./dist/libav-webcodecs-avf.mjs", "default": "./dist/libav-webcodecs-avf.js", "types": "./dist/libav.types.d.ts" }
+    "./all": {
+      "//": "This is the libav.js frontend.",
+      "import": "./dist/libav-all.mjs",
+      "default": "./dist/libav-all.js",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/all.asm": {
+      "//": "This is the libav.js factory for asm.js.",
+      "import": "./dist/libav-@VER-all.asm.js",
+      "require": "./dist/libav-@VER-all.asm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/all.wasm": {
+      "//": "This is the libav.js factory for non-threaded WASM.",
+      "import": "./dist/libav-@VER-all.wasm.js",
+      "require": "./dist/libav-@VER-all.wasm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/all.thr": {
+      "//": "This is the libav.js factory for threaded WASM.",
+      "import": "./dist/libav-@VER-all.thr.js",
+      "require": "./dist/libav-@VER-all.thr.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/all.wasm": {
+      "//": "This is the libav.js backend for non-threaded WASM.",
+      "default": "./dist/libav-@VER-all.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/all.thr.wasm": {
+      "//": "This is the libav.js backend for threaded WASM.",
+      "default": "./dist/libav-@VER-all.thr.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+
+    "./av1-opus": {
+      "//": "This is the libav.js frontend.",
+      "import": "./dist/libav-av1-opus.mjs",
+      "default": "./dist/libav-av1-opus.js",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/av1-opus.asm": {
+      "//": "This is the libav.js factory for asm.js.",
+      "import": "./dist/libav-@VER-av1-opus.asm.js",
+      "require": "./dist/libav-@VER-av1-opus.asm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/av1-opus.wasm": {
+      "//": "This is the libav.js factory for non-threaded WASM.",
+      "import": "./dist/libav-@VER-av1-opus.wasm.js",
+      "require": "./dist/libav-@VER-av1-opus.wasm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/av1-opus.thr": {
+      "//": "This is the libav.js factory for threaded WASM.",
+      "import": "./dist/libav-@VER-av1-opus.thr.js",
+      "require": "./dist/libav-@VER-av1-opus.thr.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/av1-opus.wasm": {
+      "//": "This is the libav.js backend for non-threaded WASM.",
+      "default": "./dist/libav-@VER-av1-opus.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/av1-opus.thr.wasm": {
+      "//": "This is the libav.js backend for threaded WASM.",
+      "default": "./dist/libav-@VER-av1-opus.thr.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+
+    "./vp9-opus": {
+      "//": "This is the libav.js frontend.",
+      "import": "./dist/libav-vp9-opus.mjs",
+      "default": "./dist/libav-vp9-opus.js",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/vp9-opus.asm": {
+      "//": "This is the libav.js factory for asm.js.",
+      "import": "./dist/libav-@VER-vp9-opus.asm.js",
+      "require": "./dist/libav-@VER-vp9-opus.asm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/vp9-opus.wasm": {
+      "//": "This is the libav.js factory for non-threaded WASM.",
+      "import": "./dist/libav-@VER-vp9-opus.wasm.js",
+      "require": "./dist/libav-@VER-vp9-opus.wasm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/vp9-opus.thr": {
+      "//": "This is the libav.js factory for threaded WASM.",
+      "import": "./dist/libav-@VER-vp9-opus.thr.js",
+      "require": "./dist/libav-@VER-vp9-opus.thr.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/vp9-opus.wasm": {
+      "//": "This is the libav.js backend for non-threaded WASM.",
+      "default": "./dist/libav-@VER-vp9-opus.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/vp9-opus.thr.wasm": {
+      "//": "This is the libav.js backend for threaded WASM.",
+      "default": "./dist/libav-@VER-vp9-opus.thr.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+
+    "./webm-vp9": {
+      "//": "This is the libav.js frontend.",
+      "import": "./dist/libav-webm-vp9.mjs",
+      "default": "./dist/libav-webm-vp9.js",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/webm-vp9.asm": {
+      "//": "This is the libav.js factory for asm.js.",
+      "import": "./dist/libav-@VER-webm-vp9.asm.js",
+      "require": "./dist/libav-@VER-webm-vp9.asm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/webm-vp9.wasm": {
+      "//": "This is the libav.js factory for non-threaded WASM.",
+      "import": "./dist/libav-@VER-webm-vp9.wasm.js",
+      "require": "./dist/libav-@VER-webm-vp9.wasm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/webm-vp9.thr": {
+      "//": "This is the libav.js factory for threaded WASM.",
+      "import": "./dist/libav-@VER-webm-vp9.thr.js",
+      "require": "./dist/libav-@VER-webm-vp9.thr.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/webm-vp9.wasm": {
+      "//": "This is the libav.js backend for non-threaded WASM.",
+      "default": "./dist/libav-@VER-webm-vp9.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/webm-vp9.thr.wasm": {
+      "//": "This is the libav.js backend for threaded WASM.",
+      "default": "./dist/libav-@VER-webm-vp9.thr.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+
+    "./webm-vp9-cli": {
+      "//": "This is the libav.js frontend.",
+      "import": "./dist/libav-webm-vp9-cli.mjs",
+      "default": "./dist/libav-webm-vp9-cli.js",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/webm-vp9-cli.asm": {
+      "//": "This is the libav.js factory for asm.js.",
+      "import": "./dist/libav-@VER-webm-vp9-cli.asm.js",
+      "require": "./dist/libav-@VER-webm-vp9-cli.asm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/webm-vp9-cli.wasm": {
+      "//": "This is the libav.js factory for non-threaded WASM.",
+      "import": "./dist/libav-@VER-webm-vp9-cli.wasm.js",
+      "require": "./dist/libav-@VER-webm-vp9-cli.wasm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/webm-vp9-cli.thr": {
+      "//": "This is the libav.js factory for threaded WASM.",
+      "import": "./dist/libav-@VER-webm-vp9-cli.thr.js",
+      "require": "./dist/libav-@VER-webm-vp9-cli.thr.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/webm-vp9-cli.wasm": {
+      "//": "This is the libav.js backend for non-threaded WASM.",
+      "default": "./dist/libav-@VER-webm-vp9-cli.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/webm-vp9-cli.thr.wasm": {
+      "//": "This is the libav.js backend for threaded WASM.",
+      "default": "./dist/libav-@VER-webm-vp9-cli.thr.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+
+    "./av1-opus-avf": {
+      "//": "This is the libav.js frontend.",
+      "import": "./dist/libav-av1-opus-avf.mjs",
+      "default": "./dist/libav-av1-opus-avf.js",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/av1-opus-avf.asm": {
+      "//": "This is the libav.js factory for asm.js.",
+      "import": "./dist/libav-@VER-av1-opus-avf.asm.js",
+      "require": "./dist/libav-@VER-av1-opus-avf.asm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/av1-opus-avf.wasm": {
+      "//": "This is the libav.js factory for non-threaded WASM.",
+      "import": "./dist/libav-@VER-av1-opus-avf.wasm.js",
+      "require": "./dist/libav-@VER-av1-opus-avf.wasm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/av1-opus-avf.thr": {
+      "//": "This is the libav.js factory for threaded WASM.",
+      "import": "./dist/libav-@VER-av1-opus-avf.thr.js",
+      "require": "./dist/libav-@VER-av1-opus-avf.thr.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/av1-opus-avf.wasm": {
+      "//": "This is the libav.js backend for non-threaded WASM.",
+      "default": "./dist/libav-@VER-av1-opus-avf.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/av1-opus-avf.thr.wasm": {
+      "//": "This is the libav.js backend for threaded WASM.",
+      "default": "./dist/libav-@VER-av1-opus-avf.thr.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+
+    "./vp9-opus-avf": {
+      "//": "This is the libav.js frontend.",
+      "import": "./dist/libav-vp9-opus-avf.mjs",
+      "default": "./dist/libav-vp9-opus-avf.js",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/vp9-opus-avf.asm": {
+      "//": "This is the libav.js factory for asm.js.",
+      "import": "./dist/libav-@VER-vp9-opus-avf.asm.js",
+      "require": "./dist/libav-@VER-vp9-opus-avf.asm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/vp9-opus-avf.wasm": {
+      "//": "This is the libav.js factory for non-threaded WASM.",
+      "import": "./dist/libav-@VER-vp9-opus-avf.wasm.js",
+      "require": "./dist/libav-@VER-vp9-opus-avf.wasm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/vp9-opus-avf.thr": {
+      "//": "This is the libav.js factory for threaded WASM.",
+      "import": "./dist/libav-@VER-vp9-opus-avf.thr.js",
+      "require": "./dist/libav-@VER-vp9-opus-avf.thr.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/vp9-opus-avf.wasm": {
+      "//": "This is the libav.js backend for non-threaded WASM.",
+      "default": "./dist/libav-@VER-vp9-opus-avf.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/vp9-opus-avf.thr.wasm": {
+      "//": "This is the libav.js backend for threaded WASM.",
+      "default": "./dist/libav-@VER-vp9-opus-avf.thr.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+
+    "./default": {
+      "//": "This is the libav.js frontend.",
+      "import": "./dist/libav-default.mjs",
+      "default": "./dist/libav-default.js",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/default.asm": {
+      "//": "This is the libav.js factory for asm.js.",
+      "import": "./dist/libav-@VER-default.asm.js",
+      "require": "./dist/libav-@VER-default.asm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/default.wasm": {
+      "//": "This is the libav.js factory for non-threaded WASM.",
+      "import": "./dist/libav-@VER-default.wasm.js",
+      "require": "./dist/libav-@VER-default.wasm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/default.thr": {
+      "//": "This is the libav.js factory for threaded WASM.",
+      "import": "./dist/libav-@VER-default.thr.js",
+      "require": "./dist/libav-@VER-default.thr.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/default.wasm": {
+      "//": "This is the libav.js backend for non-threaded WASM.",
+      "default": "./dist/libav-@VER-default.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/default.thr.wasm": {
+      "//": "This is the libav.js backend for threaded WASM.",
+      "default": "./dist/libav-@VER-default.thr.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+
+    "./default-cli": {
+      "//": "This is the libav.js frontend.",
+      "import": "./dist/libav-default-cli.mjs",
+      "default": "./dist/libav-default-cli.js",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/default-cli.asm": {
+      "//": "This is the libav.js factory for asm.js.",
+      "import": "./dist/libav-@VER-default-cli.asm.js",
+      "require": "./dist/libav-@VER-default-cli.asm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/default-cli.wasm": {
+      "//": "This is the libav.js factory for non-threaded WASM.",
+      "import": "./dist/libav-@VER-default-cli.wasm.js",
+      "require": "./dist/libav-@VER-default-cli.wasm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/default-cli.thr": {
+      "//": "This is the libav.js factory for threaded WASM.",
+      "import": "./dist/libav-@VER-default-cli.thr.js",
+      "require": "./dist/libav-@VER-default-cli.thr.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/default-cli.wasm": {
+      "//": "This is the libav.js backend for non-threaded WASM.",
+      "default": "./dist/libav-@VER-default-cli.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/default-cli.thr.wasm": {
+      "//": "This is the libav.js backend for threaded WASM.",
+      "default": "./dist/libav-@VER-default-cli.thr.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+
+    "./opus": {
+      "//": "This is the libav.js frontend.",
+      "import": "./dist/libav-opus.mjs",
+      "default": "./dist/libav-opus.js",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/opus.asm": {
+      "//": "This is the libav.js factory for asm.js.",
+      "import": "./dist/libav-@VER-opus.asm.js",
+      "require": "./dist/libav-@VER-opus.asm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/opus.wasm": {
+      "//": "This is the libav.js factory for non-threaded WASM.",
+      "import": "./dist/libav-@VER-opus.wasm.js",
+      "require": "./dist/libav-@VER-opus.wasm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/opus.thr": {
+      "//": "This is the libav.js factory for threaded WASM.",
+      "import": "./dist/libav-@VER-opus.thr.js",
+      "require": "./dist/libav-@VER-opus.thr.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/opus.wasm": {
+      "//": "This is the libav.js backend for non-threaded WASM.",
+      "default": "./dist/libav-@VER-opus.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/opus.thr.wasm": {
+      "//": "This is the libav.js backend for threaded WASM.",
+      "default": "./dist/libav-@VER-opus.thr.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+
+    "./opus-af": {
+      "//": "This is the libav.js frontend.",
+      "import": "./dist/libav-opus-af.mjs",
+      "default": "./dist/libav-opus-af.js",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/opus-af.asm": {
+      "//": "This is the libav.js factory for asm.js.",
+      "import": "./dist/libav-@VER-opus-af.asm.js",
+      "require": "./dist/libav-@VER-opus-af.asm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/opus-af.wasm": {
+      "//": "This is the libav.js factory for non-threaded WASM.",
+      "import": "./dist/libav-@VER-opus-af.wasm.js",
+      "require": "./dist/libav-@VER-opus-af.wasm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/opus-af.thr": {
+      "//": "This is the libav.js factory for threaded WASM.",
+      "import": "./dist/libav-@VER-opus-af.thr.js",
+      "require": "./dist/libav-@VER-opus-af.thr.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/opus-af.wasm": {
+      "//": "This is the libav.js backend for non-threaded WASM.",
+      "default": "./dist/libav-@VER-opus-af.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/opus-af.thr.wasm": {
+      "//": "This is the libav.js backend for threaded WASM.",
+      "default": "./dist/libav-@VER-opus-af.thr.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+
+    "./flac": {
+      "//": "This is the libav.js frontend.",
+      "import": "./dist/libav-flac.mjs",
+      "default": "./dist/libav-flac.js",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/flac.asm": {
+      "//": "This is the libav.js factory for asm.js.",
+      "import": "./dist/libav-@VER-flac.asm.js",
+      "require": "./dist/libav-@VER-flac.asm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/flac.wasm": {
+      "//": "This is the libav.js factory for non-threaded WASM.",
+      "import": "./dist/libav-@VER-flac.wasm.js",
+      "require": "./dist/libav-@VER-flac.wasm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/flac.thr": {
+      "//": "This is the libav.js factory for threaded WASM.",
+      "import": "./dist/libav-@VER-flac.thr.js",
+      "require": "./dist/libav-@VER-flac.thr.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/flac.wasm": {
+      "//": "This is the libav.js backend for non-threaded WASM.",
+      "default": "./dist/libav-@VER-flac.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/flac.thr.wasm": {
+      "//": "This is the libav.js backend for threaded WASM.",
+      "default": "./dist/libav-@VER-flac.thr.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+
+    "./flac-af": {
+      "//": "This is the libav.js frontend.",
+      "import": "./dist/libav-flac-af.mjs",
+      "default": "./dist/libav-flac-af.js",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/flac-af.asm": {
+      "//": "This is the libav.js factory for asm.js.",
+      "import": "./dist/libav-@VER-flac-af.asm.js",
+      "require": "./dist/libav-@VER-flac-af.asm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/flac-af.wasm": {
+      "//": "This is the libav.js factory for non-threaded WASM.",
+      "import": "./dist/libav-@VER-flac-af.wasm.js",
+      "require": "./dist/libav-@VER-flac-af.wasm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/flac-af.thr": {
+      "//": "This is the libav.js factory for threaded WASM.",
+      "import": "./dist/libav-@VER-flac-af.thr.js",
+      "require": "./dist/libav-@VER-flac-af.thr.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/flac-af.wasm": {
+      "//": "This is the libav.js backend for non-threaded WASM.",
+      "default": "./dist/libav-@VER-flac-af.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/flac-af.thr.wasm": {
+      "//": "This is the libav.js backend for threaded WASM.",
+      "default": "./dist/libav-@VER-flac-af.thr.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+
+    "./wav": {
+      "//": "This is the libav.js frontend.",
+      "import": "./dist/libav-wav.mjs",
+      "default": "./dist/libav-wav.js",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/wav.asm": {
+      "//": "This is the libav.js factory for asm.js.",
+      "import": "./dist/libav-@VER-wav.asm.js",
+      "require": "./dist/libav-@VER-wav.asm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/wav.wasm": {
+      "//": "This is the libav.js factory for non-threaded WASM.",
+      "import": "./dist/libav-@VER-wav.wasm.js",
+      "require": "./dist/libav-@VER-wav.wasm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/wav.thr": {
+      "//": "This is the libav.js factory for threaded WASM.",
+      "import": "./dist/libav-@VER-wav.thr.js",
+      "require": "./dist/libav-@VER-wav.thr.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/wav.wasm": {
+      "//": "This is the libav.js backend for non-threaded WASM.",
+      "default": "./dist/libav-@VER-wav.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/wav.thr.wasm": {
+      "//": "This is the libav.js backend for threaded WASM.",
+      "default": "./dist/libav-@VER-wav.thr.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+
+    "./wav-af": {
+      "//": "This is the libav.js frontend.",
+      "import": "./dist/libav-wav-af.mjs",
+      "default": "./dist/libav-wav-af.js",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/wav-af.asm": {
+      "//": "This is the libav.js factory for asm.js.",
+      "import": "./dist/libav-@VER-wav-af.asm.js",
+      "require": "./dist/libav-@VER-wav-af.asm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/wav-af.wasm": {
+      "//": "This is the libav.js factory for non-threaded WASM.",
+      "import": "./dist/libav-@VER-wav-af.wasm.js",
+      "require": "./dist/libav-@VER-wav-af.wasm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/wav-af.thr": {
+      "//": "This is the libav.js factory for threaded WASM.",
+      "import": "./dist/libav-@VER-wav-af.thr.js",
+      "require": "./dist/libav-@VER-wav-af.thr.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/wav-af.wasm": {
+      "//": "This is the libav.js backend for non-threaded WASM.",
+      "default": "./dist/libav-@VER-wav-af.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/wav-af.thr.wasm": {
+      "//": "This is the libav.js backend for threaded WASM.",
+      "default": "./dist/libav-@VER-wav-af.thr.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+
+    "./obsolete": {
+      "//": "This is the libav.js frontend.",
+      "import": "./dist/libav-obsolete.mjs",
+      "default": "./dist/libav-obsolete.js",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/obsolete.asm": {
+      "//": "This is the libav.js factory for asm.js.",
+      "import": "./dist/libav-@VER-obsolete.asm.js",
+      "require": "./dist/libav-@VER-obsolete.asm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/obsolete.wasm": {
+      "//": "This is the libav.js factory for non-threaded WASM.",
+      "import": "./dist/libav-@VER-obsolete.wasm.js",
+      "require": "./dist/libav-@VER-obsolete.wasm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/obsolete.thr": {
+      "//": "This is the libav.js factory for threaded WASM.",
+      "import": "./dist/libav-@VER-obsolete.thr.js",
+      "require": "./dist/libav-@VER-obsolete.thr.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/obsolete.wasm": {
+      "//": "This is the libav.js backend for non-threaded WASM.",
+      "default": "./dist/libav-@VER-obsolete.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/obsolete.thr.wasm": {
+      "//": "This is the libav.js backend for threaded WASM.",
+      "default": "./dist/libav-@VER-obsolete.thr.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+
+    "./webm": {
+      "//": "This is the libav.js frontend.",
+      "import": "./dist/libav-webm.mjs",
+      "default": "./dist/libav-webm.js",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/webm.asm": {
+      "//": "This is the libav.js factory for asm.js.",
+      "import": "./dist/libav-@VER-webm.asm.js",
+      "require": "./dist/libav-@VER-webm.asm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/webm.wasm": {
+      "//": "This is the libav.js factory for non-threaded WASM.",
+      "import": "./dist/libav-@VER-webm.wasm.js",
+      "require": "./dist/libav-@VER-webm.wasm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/webm.thr": {
+      "//": "This is the libav.js factory for threaded WASM.",
+      "import": "./dist/libav-@VER-webm.thr.js",
+      "require": "./dist/libav-@VER-webm.thr.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/webm.wasm": {
+      "//": "This is the libav.js backend for non-threaded WASM.",
+      "default": "./dist/libav-@VER-webm.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/webm.thr.wasm": {
+      "//": "This is the libav.js backend for threaded WASM.",
+      "default": "./dist/libav-@VER-webm.thr.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+
+    "./webm-cli": {
+      "//": "This is the libav.js frontend.",
+      "import": "./dist/libav-webm-cli.mjs",
+      "default": "./dist/libav-webm-cli.js",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/webm-cli.asm": {
+      "//": "This is the libav.js factory for asm.js.",
+      "import": "./dist/libav-@VER-webm-cli.asm.js",
+      "require": "./dist/libav-@VER-webm-cli.asm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/webm-cli.wasm": {
+      "//": "This is the libav.js factory for non-threaded WASM.",
+      "import": "./dist/libav-@VER-webm-cli.wasm.js",
+      "require": "./dist/libav-@VER-webm-cli.wasm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/webm-cli.thr": {
+      "//": "This is the libav.js factory for threaded WASM.",
+      "import": "./dist/libav-@VER-webm-cli.thr.js",
+      "require": "./dist/libav-@VER-webm-cli.thr.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/webm-cli.wasm": {
+      "//": "This is the libav.js backend for non-threaded WASM.",
+      "default": "./dist/libav-@VER-webm-cli.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/webm-cli.thr.wasm": {
+      "//": "This is the libav.js backend for threaded WASM.",
+      "default": "./dist/libav-@VER-webm-cli.thr.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+
+    "./vp8-opus": {
+      "//": "This is the libav.js frontend.",
+      "import": "./dist/libav-vp8-opus.mjs",
+      "default": "./dist/libav-vp8-opus.js",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/vp8-opus.asm": {
+      "//": "This is the libav.js factory for asm.js.",
+      "import": "./dist/libav-@VER-vp8-opus.asm.js",
+      "require": "./dist/libav-@VER-vp8-opus.asm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/vp8-opus.wasm": {
+      "//": "This is the libav.js factory for non-threaded WASM.",
+      "import": "./dist/libav-@VER-vp8-opus.wasm.js",
+      "require": "./dist/libav-@VER-vp8-opus.wasm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/vp8-opus.thr": {
+      "//": "This is the libav.js factory for threaded WASM.",
+      "import": "./dist/libav-@VER-vp8-opus.thr.js",
+      "require": "./dist/libav-@VER-vp8-opus.thr.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/vp8-opus.wasm": {
+      "//": "This is the libav.js backend for non-threaded WASM.",
+      "default": "./dist/libav-@VER-vp8-opus.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/vp8-opus.thr.wasm": {
+      "//": "This is the libav.js backend for threaded WASM.",
+      "default": "./dist/libav-@VER-vp8-opus.thr.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+
+    "./vp8-opus-avf": {
+      "//": "This is the libav.js frontend.",
+      "import": "./dist/libav-vp8-opus-avf.mjs",
+      "default": "./dist/libav-vp8-opus-avf.js",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/vp8-opus-avf.asm": {
+      "//": "This is the libav.js factory for asm.js.",
+      "import": "./dist/libav-@VER-vp8-opus-avf.asm.js",
+      "require": "./dist/libav-@VER-vp8-opus-avf.asm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/vp8-opus-avf.wasm": {
+      "//": "This is the libav.js factory for non-threaded WASM.",
+      "import": "./dist/libav-@VER-vp8-opus-avf.wasm.js",
+      "require": "./dist/libav-@VER-vp8-opus-avf.wasm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/vp8-opus-avf.thr": {
+      "//": "This is the libav.js factory for threaded WASM.",
+      "import": "./dist/libav-@VER-vp8-opus-avf.thr.js",
+      "require": "./dist/libav-@VER-vp8-opus-avf.thr.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/vp8-opus-avf.wasm": {
+      "//": "This is the libav.js backend for non-threaded WASM.",
+      "default": "./dist/libav-@VER-vp8-opus-avf.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/vp8-opus-avf.thr.wasm": {
+      "//": "This is the libav.js backend for threaded WASM.",
+      "default": "./dist/libav-@VER-vp8-opus-avf.thr.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+
+    "./webcodecs": {
+      "//": "This is the libav.js frontend.",
+      "import": "./dist/libav-webcodecs.mjs",
+      "default": "./dist/libav-webcodecs.js",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/webcodecs.asm": {
+      "//": "This is the libav.js factory for asm.js.",
+      "import": "./dist/libav-@VER-webcodecs.asm.js",
+      "require": "./dist/libav-@VER-webcodecs.asm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/webcodecs.wasm": {
+      "//": "This is the libav.js factory for non-threaded WASM.",
+      "import": "./dist/libav-@VER-webcodecs.wasm.js",
+      "require": "./dist/libav-@VER-webcodecs.wasm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/webcodecs.thr": {
+      "//": "This is the libav.js factory for threaded WASM.",
+      "import": "./dist/libav-@VER-webcodecs.thr.js",
+      "require": "./dist/libav-@VER-webcodecs.thr.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/webcodecs.wasm": {
+      "//": "This is the libav.js backend for non-threaded WASM.",
+      "default": "./dist/libav-@VER-webcodecs.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/webcodecs.thr.wasm": {
+      "//": "This is the libav.js backend for threaded WASM.",
+      "default": "./dist/libav-@VER-webcodecs.thr.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+
+    "./webcodecs-avf": {
+      "//": "This is the libav.js frontend.",
+      "import": "./dist/libav-webcodecs-avf.mjs",
+      "default": "./dist/libav-webcodecs-avf.js",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/webcodecs-avf.asm": {
+      "//": "This is the libav.js factory for asm.js.",
+      "import": "./dist/libav-@VER-webcodecs-avf.asm.js",
+      "require": "./dist/libav-@VER-webcodecs-avf.asm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/webcodecs-avf.wasm": {
+      "//": "This is the libav.js factory for non-threaded WASM.",
+      "import": "./dist/libav-@VER-webcodecs-avf.wasm.js",
+      "require": "./dist/libav-@VER-webcodecs-avf.wasm.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./factory/webcodecs-avf.thr": {
+      "//": "This is the libav.js factory for threaded WASM.",
+      "import": "./dist/libav-@VER-webcodecs-avf.thr.js",
+      "require": "./dist/libav-@VER-webcodecs-avf.thr.mjs",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/webcodecs-avf.wasm": {
+      "//": "This is the libav.js backend for non-threaded WASM.",
+      "default": "./dist/libav-@VER-webcodecs-avf.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    },
+    "./backend/webcodecs-avf.thr.wasm": {
+      "//": "This is the libav.js backend for threaded WASM.",
+      "default": "./dist/libav-@VER-webcodecs-avf.thr.wasm.wasm",
+      "types": "./dist/libav.types.d.ts"
+    }
   },
   "types": "dist/libav.types.d.ts",
   "directories": {
